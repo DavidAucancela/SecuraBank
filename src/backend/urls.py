@@ -19,7 +19,7 @@ from django.urls import path, include
 from rest_framework import routers
 from transacciones.views import TransaccionViewSet
 from vista.views import home
-from vista.views import CustomLoginView
+from usuarios.views import RegisterView, LoginView
 
 
 router = routers.DefaultRouter()
@@ -27,8 +27,13 @@ router.register(r'transacciones', TransaccionViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
     path('api/', include(router.urls)),
-    path('login/', CustomLoginView.as_view(), name='login'),
+    path('api/transacciones/', include('transacciones.urls')),
+
+    path('register/', RegisterView.as_view(), name='register'),
+    path('login/', LoginView.as_view(), name='login'),
+
     path('', home),
 ]
 

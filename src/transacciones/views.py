@@ -4,8 +4,9 @@ from .models import Transaccion
 from .serializers import TransaccionSerializer
 from django.contrib.auth.views import LoginView
 
-class CustomLoginView(LoginView):
-    template_name = 'login.html'
+from django.contrib.auth import authenticate, login
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 
 class TransaccionViewSet(viewsets.ModelViewSet):
