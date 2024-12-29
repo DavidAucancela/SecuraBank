@@ -1,0 +1,8 @@
+django
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+django-otp
+qrcode
+python-decouple
+psycopg2-binary
