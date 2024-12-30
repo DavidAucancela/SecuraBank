@@ -124,7 +124,7 @@ CORS_ALLOW_ALL_ORIGINS = True # Solo para desarrollo. En producción, especifica
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',  # Para tokens
-        # 'rest_framework_simplejwt.authentication.JWTAuthentication',  # Para JWT
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Para JWT
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',

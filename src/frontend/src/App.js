@@ -2,6 +2,8 @@ import React from 'react';
 //import Transacciones from "./components/Transacciones";
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import PasswordReset from './components/Auth/PasswordReset';
@@ -14,7 +16,7 @@ import PrivateRoute from './components/PrivateRoute';
 function App() {
     return (
         <Router>
-            <div>
+            <AuthProvider>
                 <h1>Admin Panel con React y Django</h1>
                 <Routes>
                     <Route path="/login" element={<Login />} />
@@ -32,7 +34,7 @@ function App() {
                     />
                     <Route path="/" element={<Navigate to="/dashboard" />} />
                 </Routes>
-            </div>
+            </AuthProvider>
         </Router>
     );
 }
