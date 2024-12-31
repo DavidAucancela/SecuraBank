@@ -17,7 +17,10 @@ function App() {
     return (
         <Router>
             <AuthProvider>
-                <h1>Admin Panel con React y Django</h1>
+            <div className="text-center mt-4">
+                <h1 className="mt-3">SecuraBank</h1>
+            </div>
+                
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />

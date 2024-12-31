@@ -1,10 +1,19 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+
+# Para JWT
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+
+# Para MFA (django-otp)
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 class RegisterSerializer(serializers.ModelSerializer):
+    """
+    Serializador para registro de usuarios, con confirmación de contraseña
+    y validación de fortaleza de contraseña (Django).
+    """
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)  # Confirmación de contraseña
 
@@ -30,8 +39,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Serializer personalizado para incluir datos adicionales en el token"""
-
+    """
+    Serializer personalizado para login con JWT.
+    Retorna username y email como parte del token.
+    """
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
@@ -49,6 +60,9 @@ class TOTPDeviceSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'confirmed']
 
 class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+    Para solicitar el envío de correo de reseteo de contraseña.
+    """
     email = serializers.EmailField()
 
     def validate_email(self, value):
@@ -57,6 +71,9 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         return value
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    Para confirmar el reseteo de contraseña (con uid y token).
+    """
     uid = serializers.CharField()
     token = serializers.CharField()
     new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
