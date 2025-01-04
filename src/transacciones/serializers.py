@@ -1,7 +1,8 @@
+# transacciones/serializers.py
 from rest_framework import serializers
-from .models import Transaccion
+from .models import Transaction
 
-class TransaccionSerializer(serializers.ModelSerializer):
+class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Transaccion
+        model = Transaction
         fields = '__all__'

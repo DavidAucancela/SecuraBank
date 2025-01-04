@@ -1,24 +1,21 @@
+# transacciones/models.py
 from django.db import models
-from django.contrib.auth.models import User
+from django.utils import timezone
 
-class Transaccion(models.Model):
-    ESTADO_CHOICES = [
-        ('enviada', 'Enviada'),
-        ('pendiente', 'Pendiente'),
-        ('cancelada', 'Cancelada'),
-    ]
+ESTADO_CHOICES = (
+    ('proceso', 'En proceso'),
+    ('completada', 'Completada'),
+    ('fallida', 'Fallida'),
+    ('revertida', 'Revertida'),
+)
 
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)  # Usuario 
-    descripcion = models.CharField(max_length=255)
+class Transaction(models.Model):
+    # Si tienes un modelo Account, importalo: from users.models import Account (o donde se ubique)
+    cuenta_origen = models.ForeignKey('users.Account', on_delete=models.CASCADE, related_name='transacciones_salida')
+    cuenta_destino = models.ForeignKey('users.Account', on_delete=models.CASCADE, related_name='transacciones_entrada')
     monto = models.DecimalField(max_digits=10, decimal_places=2)
-    moneda = models.CharField(
-        max_length=10,
-        choices=[('USD', 'Dólar'), ('EUR', 'Euro'), ('PESO', 'Peso')],
-        default='USD',  # Valor predeterminado
-    )
-    fecha = models.DateTimeField(auto_now_add=True)
-    ubicacion = models.CharField(max_length=255, default="Aquí nomas")  # Guardaremos la ubicación como texto
-    estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='pendiente')  # Estado predeterminado: pendiente
+    fecha = models.DateTimeField(default=timezone.now)
+    estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='proceso')
 
     def __str__(self):
-        return f"{self.descripcion} - {self.usuario}"
+        return f"Tx #{self.id} | {self.cuenta_origen} -> {self.cuenta_destino} | {self.monto}"

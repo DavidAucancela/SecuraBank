@@ -30,6 +30,10 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_totp',
 
     'users.apps.UsersConfig',
+    #'transacciones.apps.TransaccionesConfig', #parte de seguridad
+    'transacciones',
+    #'accounts.apps.AccountsConfig', #parte de seguridad
+    'accounts',
 ]
 
 MIDDLEWARE = [

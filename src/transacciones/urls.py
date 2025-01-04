@@ -1,6 +1,8 @@
-from django.urls import path
-from . import views  #vistas
+# transacciones/urls.py
+from rest_framework.routers import DefaultRouter
+from .views import TransactionViewSet
 
-urlpatterns = [
-    path('', views.home, name='transacciones_home'),  
-]
+router = DefaultRouter()
+router.register(r'transactions', TransactionViewSet, basename='transactions')
+
+urlpatterns = router.urls

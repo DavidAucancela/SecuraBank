@@ -5,6 +5,10 @@ import { jwtDecode } from 'jwt-decode';
 import api from '../api';
 import { useNavigate } from 'react-router-dom';
 
+import axios from 'axios';
+
+
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -26,8 +30,19 @@ export const AuthProvider = ({ children }) => {
 
   const loginUser = async (username, password) => {
     try {
-      const response = await api.post('login/', { username, password });
+      const res = await axios.post('login/', { username, password }); //ACTUALIZAR CON LA URL FINAL SEGUN EL BACKEND
+      if (res.status === 200) {
+        // login exitoso
 
+        // Redirigir con React Router a /cuentas
+        navigate('/cuentas');
+        return { success: true };
+      }
+    } catch (error) {
+      return { success: false, message: 'Error al iniciar sesión' };
+    }
+
+        /* ACA VA LA PARTE DE MFA - CONFIGURAR
       if (response.data.mfa_required) {
         setIsMfaRequired(true);
         return { success: true, mfaRequired: true };
@@ -44,10 +59,11 @@ export const AuthProvider = ({ children }) => {
 
         return { success: true, mfaRequired: false };
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, message: 'Credenciales inválidas.' };
-    }
+      } catch (error) {
+        console.error('Login error:', error);
+        return { success: false, message: 'Credenciales inválidas.' };
+      }
+      */
   };
 
   const logoutUser = async () => {
