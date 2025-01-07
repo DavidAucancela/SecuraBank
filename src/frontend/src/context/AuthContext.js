@@ -1,109 +1,156 @@
-import React, { createContext, useState, useEffect } from 'react';
-// Importación con named export
-import { jwtDecode } from 'jwt-decode';
+// src/context/AuthContext.js
 
-import api from '../api';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode'; // Importación nombrada correcta
 
 import axios from 'axios';
 
-
-
+// Crear el contexto
 export const AuthContext = createContext();
 
+// Proveedor del contexto
 export const AuthProvider = ({ children }) => {
-  const navigate = useNavigate();
-
   const [authTokens, setAuthTokens] = useState(() => {
     const access = localStorage.getItem('access_token');
     const refresh = localStorage.getItem('refresh_token');
-    return (access && refresh) ? { access, refresh } : null;
+    return access && refresh ? { access, refresh } : null;
   });
 
   const [user, setUser] = useState(() => {
-    const token = localStorage.getItem('access_token');
-    // Usar jwtDecode, en minúscula/camelCase
-    return token ? jwtDecode(token) : null;
+    if (authTokens) {
+      try {
+        return jwtDecode(authTokens.access);
+      } catch (error) {
+        console.error('Error decodificando JWT:', error);
+        return null;
+      }
+    }
+    return null;
   });
 
   const [isMfaRequired, setIsMfaRequired] = useState(false);
 
+  // Función para iniciar sesión
   const loginUser = async (username, password) => {
     try {
       const res = await axios.post(
-        'http://localhost:8000/api/users/login/', 
+        'http://localhost:8000/api/users/login/',
         { 
           username, 
           password 
         }
       );
-      if (res.status === 200) {
-        // login exitoso
 
-        // Redirigir con React Router a /cuentas
-        navigate('/cuentas');
-        return { success: true };
+      if (res.status === 200) {
+        const data = res.data;
+
+        if (data.mfa_required) {
+          // MFA requerido
+          return { success: true, mfaRequired: true };
+        } else {
+          // MFA no requerido, almacenar tokens
+          const { access, refresh } = data;
+          if (access && refresh) {
+            localStorage.setItem('access_token', access);
+            localStorage.setItem('refresh_token', refresh);
+            setAuthTokens({ access, refresh });
+            setUser(jwtDecode(access));
+            return { success: true, mfaRequired: false };
+          } else {
+            return { success: false, message: 'Respuesta inesperada del servidor.' };
+          }
+        }
+      } else {
+        return { success: false, message: 'Error al iniciar sesión.' };
       }
     } catch (error) {
-      return { success: false, message: 'Error al iniciar sesión' };
-    }
-
-        /* ACA VA LA PARTE DE MFA - CONFIGURAR
-      if (response.data.mfa_required) {
-        setIsMfaRequired(true);
-        return { success: true, mfaRequired: true };
+      console.error('Error en loginUser:', error);
+      if (error.response && error.response.data && error.response.data.detail) {
+        return { success: false, message: error.response.data.detail };
+      } else if (error.response && error.response.status === 429) {
+        return { success: false, message: 'Demasiados intentos fallidos. Inténtalo de nuevo más tarde.' };
       } else {
-        const { access, refresh } = response.data;
-        setIsMfaRequired(false);
-
-        setAuthTokens({ access, refresh });
-        // De nuevo, usar jwtDecode
-        setUser(jwtDecode(access));
-
-        localStorage.setItem('access_token', access);
-        localStorage.setItem('refresh_token', refresh);
-
-        return { success: true, mfaRequired: false };
+        return { success: false, message: 'Error al iniciar sesión.' };
       }
-      } catch (error) {
-        console.error('Login error:', error);
-        return { success: false, message: 'Credenciales inválidas.' };
-      }
-      */
+    }
   };
 
+  // Función para confirmar MFA
+  const confirmMFA = async (username, token) => {
+    try {
+      const res = await axios.post(
+        'http://localhost:8000/api/users/mfa/confirm/',
+        { 
+          username, 
+          token 
+        }
+      );
+
+      if (res.status === 200) {
+        const { access, refresh } = res.data;
+        if (access && refresh) {
+          localStorage.setItem('access_token', access);
+          localStorage.setItem('refresh_token', refresh);
+          setAuthTokens({ access, refresh });
+          setUser(jwtDecode(access));
+          return { success: true };
+        } else {
+          return { success: false, message: 'Respuesta inesperada del servidor al confirmar MFA.' };
+        }
+      } else {
+        return { success: false, message: 'Error al confirmar MFA.' };
+      }
+    } catch (error) {
+      console.error('Error en confirmMFA:', error);
+      if (error.response && error.response.data && error.response.data.detail) {
+        return { success: false, message: error.response.data.detail };
+      } else if (error.response && error.response.status === 429) {
+        return { success: false, message: 'Demasiados intentos fallidos de MFA. Inténtalo de nuevo más tarde.' };
+      } else {
+        return { success: false, message: 'Error al confirmar MFA.' };
+      }
+    }
+  };
+
+  // Función para cerrar sesión
   const logoutUser = async () => {
     try {
       if (authTokens?.refresh) {
-        await api.post('logout/', { refresh: authTokens.refresh });
+        await axios.post(
+          'http://localhost:8000/api/users/logout/',
+          { refresh: authTokens.refresh },
+          {
+            headers: {
+              'Authorization': `Bearer ${authTokens.access}`,
+            },
+          }
+        );
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Error al cerrar sesión:', error);
     }
     setAuthTokens(null);
     setUser(null);
     setIsMfaRequired(false);
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    navigate('/login');
   };
 
+  // Función para renovar tokens
   const updateToken = async () => {
     if (authTokens) {
       try {
-        const response = await api.post('token/refresh/', {
-          refresh: authTokens.refresh,
-        });
+        const response = await axios.post(
+          'http://localhost:8000/api/users/token/refresh/',
+          { refresh: authTokens.refresh }
+        );
         const { access, refresh } = response.data;
-
-        setAuthTokens({ access, refresh });
-        // Llamar jwtDecode
-        setUser(jwtDecode(access));
-
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
+        setAuthTokens({ access, refresh });
+        setUser(jwtDecode(access));
       } catch (error) {
-        console.error('Error al refrescar token:', error);
+        console.error('Error al renovar token:', error);
         logoutUser();
       }
     }
@@ -112,16 +159,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let interval;
     if (authTokens) {
-      // Llamar jwtDecode
-      const decoded = jwtDecode(authTokens.access);
-      const expiresAt = decoded.exp * 1000;
-      const tiempoRestante = expiresAt - Date.now();
+      try {
+        const decoded = jwtDecode(authTokens.access);
+        const expiresAt = decoded.exp * 1000;
+        const tiempoRestante = expiresAt - Date.now();
 
-      const refrescarEn = tiempoRestante - 60000;
-      if (refrescarEn > 0) {
-        interval = setTimeout(() => {
-          updateToken();
-        }, refrescarEn);
+        const refrescarEn = tiempoRestante - 60000; // Renovar 1 minuto antes de expirar
+        if (refrescarEn > 0) {
+          interval = setTimeout(() => {
+            updateToken();
+          }, refrescarEn);
+        }
+      } catch (error) {
+        console.error('Error decodificando token en useEffect:', error);
+        logoutUser();
       }
     }
     return () => clearTimeout(interval);
@@ -135,8 +186,8 @@ export const AuthProvider = ({ children }) => {
         isMfaRequired,
         setIsMfaRequired,
         loginUser,
+        confirmMFA,
         logoutUser,
-        setAuthTokens,
       }}
     >
       {children}

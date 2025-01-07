@@ -1,3 +1,5 @@
+# users/models.py
+
 from django.contrib.auth.models import User
 from django.db import models
 from django_otp.models import Device
@@ -25,3 +27,15 @@ class Account(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.numero_cuenta}"
+
+class LoginAttempt(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='login_attempts')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    successful = models.BooleanField(default=False)
+    is_mfa_attempt = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} - {'Success' if self.successful else 'Failure'} at {self.timestamp} (MFA: {self.is_mfa_attempt})"
+
+    class Meta:
+        ordering = ['-timestamp']

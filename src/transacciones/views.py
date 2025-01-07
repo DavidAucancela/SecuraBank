@@ -8,6 +8,9 @@ from .models import Transaction
 from .serializers import TransactionSerializer
 from users.models import Account  # Ajusta la importación a tu proyecto
 
+from rest_framework import status
+from django.db.models import Q
+
 class TransactionViewSet(viewsets.ModelViewSet):
     """
     CRUD de transacciones
@@ -28,11 +31,26 @@ class TransactionViewSet(viewsets.ModelViewSet):
         cuenta_destino_id = data.get('cuenta_destino')
         monto = data.get('monto')
 
+
+        # Validación para verificar que el monto es positivo
+        if float(monto) <= 0:
+            return Response(
+                {"detail": "El monto debe ser mayor que cero."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
             with db_transaction.atomic():
                 # Bloqueamos las cuentas para evitar concurrencia
                 cuenta_origen = Account.objects.select_for_update().get(pk=cuenta_origen_id)
                 cuenta_destino = Account.objects.select_for_update().get(pk=cuenta_destino_id)
+
+                # Validación para asegurarse de que las cuentas no sean iguales
+                if cuenta_origen_id == cuenta_destino_id:
+                    return Response(
+                        {"detail": "La cuenta origen y destino no pueden ser la misma."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
                 # 1) Validaciones
                 if cuenta_origen_id == cuenta_destino_id:
@@ -88,11 +106,12 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+     # Vista para revertir transacciones completadas
     @action(detail=True, methods=['post'])
     def revertir(self, request, pk=None):
         """
         Endpoint para revertir una transacción COMPLETADA.
-        Solo accesible para superusuarios o según la lógica de tu app.
+        Solo accesible para superusuarios o según la lógica de la app.
         """
         try:
             transaccion = self.get_object()
@@ -137,3 +156,30 @@ class TransactionViewSet(viewsets.ModelViewSet):
             )
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class TransactionHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Vista para obtener el historial de transacciones de un usuario.
+    Se pueden filtrar por tipo (deposito, retiro) y rango de fechas.
+    """
+    serializer_class = TransactionSerializer
+
+    def get_queryset(self):
+        # Solo mostramos las transacciones de las cuentas del usuario logueado
+        queryset = Transaction.objects.filter(
+            Q(cuenta_origen__user=self.request.user) | Q(cuenta_destino__user=self.request.user)
+        )
+
+        # Filtrar por tipo de transacción (deposito, retiro)
+        transaction_type = self.request.query_params.get('transaction_type', None)
+        if transaction_type:
+            queryset = queryset.filter(estado=transaction_type)
+
+        # Filtrar por rango de fechas (start_date y end_date)
+        start_date = self.request.query_params.get('start_date', None)
+        end_date = self.request.query_params.get('end_date', None)
+
+        if start_date and end_date:
+            queryset = queryset.filter(fecha__range=[start_date, end_date])
+
+        return queryset

@@ -8,8 +8,7 @@ from .serializers import AccountSerializer
 
 class AccountViewSet(viewsets.ModelViewSet):
     """
-    Vista CRUD para las cuentas.
-    - list, retrieve, create, update, destroy
+    CRUD de cuentas
     """
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
@@ -17,7 +16,8 @@ class AccountViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Sobre-escribimos para que cada usuario vea solo sus cuentas
+        cada usuario vea solo sus cuentas
+        devolver las cuentas del usuario logueado
         """
         return Account.objects.filter(user=self.request.user)
 

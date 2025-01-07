@@ -41,6 +41,7 @@ const CuentasPage = () => {
 
     setLoading(true);
     try {
+      // Verificar la URL de la API y los datos
       const nueva = await crearCuenta(accountNumber);
       Swal.fire('Cuenta creada', `Se ha creado la cuenta ${nueva.account_number}`, 'success');
       setAccountNumber('');

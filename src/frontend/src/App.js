@@ -1,24 +1,21 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 
-//autenticación
+// Autenticación
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import PasswordReset from './components/Auth/PasswordReset';
 import PasswordResetConfirm from './components/Auth/PasswordResetConfirm';
 import MFA from './components/Auth/MFA';
 
-//componentes principales
-import Dashboard from './components/Dashboard';
+// Componentes principales
+import CuentasPage from './components/cuentas/CuentasPage';
 import PrivateRoute from './components/PrivateRoute';
 
-//transacciones
+// Transacciones
 import TransaccionesPage from './components/transacciones/TransaccionesPage';
-
-//Cuentas:
-import CuentasPage from './components/cuentas/CuentasPage';
-
 
 function App() {
     return (
@@ -29,9 +26,6 @@ function App() {
                 </div>
                 
                 <Routes>
-                    {/* Cuando visite http://localhost:3000/api/transacciones */}
-                    <Route path="/api/transacciones" element={<TransaccionesPage />} />     
-                    
                     {/* Rutas públicas */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
@@ -39,19 +33,18 @@ function App() {
                     <Route path="/reset-password" element={<PasswordResetConfirm />} />
                     <Route path="/mfa" element={<MFA />} />
                     <Route path="/transacciones" element={<TransaccionesPage />} />
-                    <Route path="/cuentas" element={<CuentasPage />} />
                     
                     {/* Rutas protegidas (privadas) */}
                     <Route 
-                        path="/dashboard" 
+                        path="/cuentas" 
                         element={
                             <PrivateRoute>
-                                <Dashboard />
+                                <CuentasPage />
                             </PrivateRoute>
                         }
                     />
-
-                    {/* Redirección de la raíz al dashboard */}
+    
+                    {/* Redirección de la raíz al login */}
                     <Route path="/" element={<Navigate to="/login" />} />
                 </Routes>
             </AuthProvider>

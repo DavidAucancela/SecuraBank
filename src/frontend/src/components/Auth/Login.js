@@ -52,14 +52,14 @@ const Login = () => {
     if (response.success) {
       if (response.mfaRequired) {
         // Si el backend indicó que MFA está activo,
-        // redirigimos a la vista MFA
-        navigate('/mfa');
+        // redirigimos a la vista MFA y pasamos el username
+        navigate('/mfa', { state: { username } });
       } else {
-        // De lo contrario, ya tenemos tokens, ir a dashboard
-        navigate('/dashboard');
+        // De lo contrario, ya tenemos tokens, ir a cuentas
+        navigate('/cuentas');
       }
     } else {
-      // Credenciales inválidas: mostramos SweetAlert2
+      // Mostrar mensaje de error
       Swal.fire({
         title: 'Error',
         text: response.message, // o el mensaje que te devuelva tu API
@@ -80,12 +80,14 @@ const Login = () => {
 
                 {/* Campo Usuario */}
                 <div className="mb-3">
-                  <label className="form-label">Usuario</label>
+                  <label htmlFor="username" className="form-label">Usuario</label>
                   <input
+                    id="username"
                     type="text"
                     className={`form-control ${usernameError ? 'is-invalid' : ''}`}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"  // Eliminación de la advertencia
                   />
                   {usernameError && (
                     <div className="invalid-feedback">{usernameError}</div>
@@ -94,7 +96,7 @@ const Login = () => {
 
                 {/* Campo Contraseña */}
                 <div className="mb-3">
-                <label htmlFor="password">Contraseña</label>
+                  <label htmlFor="password" className="form-label">Contraseña</label>
                   <input
                     id="password"
                     name="password"
@@ -104,12 +106,15 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                   />
+                  {passwordError && (
+                    <div className="invalid-feedback">{passwordError}</div>
+                  )}
                 </div>
 
                 {/* Botón con spinner */}
                 <button
                   type="submit"
-                  className="btn btn-primary w-100"
+                  className="btn btn-primary w-100 mb-2"
                   disabled={loading}
                 >
                   {loading ? (
