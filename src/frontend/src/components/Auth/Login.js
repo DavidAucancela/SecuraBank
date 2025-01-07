@@ -94,16 +94,16 @@ const Login = () => {
 
                 {/* Campo Contraseña */}
                 <div className="mb-3">
-                  <label className="form-label">Contraseña</label>
+                <label htmlFor="password">Contraseña</label>
                   <input
+                    id="password"
+                    name="password"
                     type="password"
                     className={`form-control ${passwordError ? 'is-invalid' : ''}`}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                   />
-                  {passwordError && (
-                    <div className="invalid-feedback">{passwordError}</div>
-                  )}
                 </div>
 
                 {/* Botón con spinner */}

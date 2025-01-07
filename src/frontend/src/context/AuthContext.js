@@ -30,7 +30,13 @@ export const AuthProvider = ({ children }) => {
 
   const loginUser = async (username, password) => {
     try {
-      const res = await axios.post('login/', { username, password }); //ACTUALIZAR CON LA URL FINAL SEGUN EL BACKEND
+      const res = await axios.post(
+        'http://localhost:8000/api/users/login/', 
+        { 
+          username, 
+          password 
+        }
+      );
       if (res.status === 200) {
         // login exitoso
 
