@@ -221,6 +221,12 @@ const MFA = () => {
                                     Cancelar
                                 </button>
                             </form>
+
+                            <div className="text-center mt-3">
+                                <p>
+                                    <Link to="/login">Volver al Login</Link>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

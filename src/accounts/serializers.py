@@ -4,5 +4,5 @@ from .models import Account
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['id', 'user', 'account_number', 'saldo']
-        read_only_fields = ['user', 'saldo']  # El 'user' lo setea el backend
+        fields = ['id', 'account_number', 'saldo', 'created_at']
+        read_only_fields = ['id', 'saldo', 'created_at']

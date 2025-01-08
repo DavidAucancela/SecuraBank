@@ -1,5 +1,3 @@
-# users/models.py
-
 from django.contrib.auth.models import User
 from django.db import models
 from django_otp.models import Device
@@ -20,6 +18,7 @@ class TOTPDevice(Device):
     def __str__(self):
         return f"{self.user.username} - {self.name}"
 
+#
 class Account(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  
     numero_cuenta = models.CharField(max_length=50, unique=True)
@@ -27,6 +26,7 @@ class Account(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.numero_cuenta}"
+
 
 class LoginAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='login_attempts')

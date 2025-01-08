@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const PasswordReset = () => {
+  const [username, setUsername] = useState(''); 
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -13,6 +14,7 @@ const PasswordReset = () => {
     e.preventDefault();
     setLoading(true);
     try {
+     // Enviar tanto el usuario como el correo electrónico al backend
       const response = await api.post('password-reset/', { email });
       setMessage(response.data.detail);
       setError('');
@@ -30,7 +32,7 @@ const PasswordReset = () => {
         <div className="col-md-6">
           <div className="card mt-5">
             <div className="card-body">
-              <h2 className="text-center mb-4">Restablecer Contraseña</h2>
+            <h2 className="text-center mb-4">Restablecer Contraseña</h2>
 
               {/* Mensajes de éxito o error */}
               {message && (
@@ -45,6 +47,19 @@ const PasswordReset = () => {
               )}
 
               <form onSubmit={handleSubmit}>
+                {/* Nuevo campo para el usuario */}
+                <div className="mb-3">
+                  <label className="form-label">Usuario</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Campo existente para el correo electrónico */}
                 <div className="mb-3">
                   <label className="form-label">Correo Electrónico</label>
                   <input

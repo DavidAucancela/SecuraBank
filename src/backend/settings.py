@@ -71,7 +71,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 #Database
-#postgresql - SEGURA
+#postgresql -SEGURA
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -82,6 +82,7 @@ DATABASES = {
         'PORT': config('DB_PORT'),   
     }
 }
+
 
 # controles contraseñas
 AUTH_PASSWORD_VALIDATORS = [

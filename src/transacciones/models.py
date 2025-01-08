@@ -1,6 +1,6 @@
-# transacciones/models.py
 from django.db import models
 from django.utils import timezone
+from accounts.models import Account
 
 ESTADO_CHOICES = (
     ('proceso', 'En proceso'),
@@ -10,9 +10,8 @@ ESTADO_CHOICES = (
 )
 
 class Transaction(models.Model):
-    # Si tienes un modelo Account, importalo: from users.models import Account (o donde se ubique)
-    cuenta_origen = models.ForeignKey('users.Account', on_delete=models.CASCADE, related_name='transacciones_salida')
-    cuenta_destino = models.ForeignKey('users.Account', on_delete=models.CASCADE, related_name='transacciones_entrada')
+    cuenta_origen = models.ForeignKey(Account, related_name='transactions_origin', on_delete=models.CASCADE)
+    cuenta_destino = models.ForeignKey(Account, related_name='transactions_destino', on_delete=models.CASCADE)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     fecha = models.DateTimeField(default=timezone.now)
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='proceso')

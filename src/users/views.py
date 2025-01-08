@@ -192,6 +192,7 @@ def mfa_status(request):
     has_confirmed_mfa = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
     return Response({'mfa_required': has_confirmed_mfa}, status=status.HTTP_200_OK)
 
+# revisar si borrar esta vista
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def resend_mfa_code(request):
@@ -249,7 +250,7 @@ class PasswordResetRequestView(generics.GenericAPIView):
         token = token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        # URL que tu frontend React manejará (puede ser /reset-password/:uid/:token)
+        # URL que tu frontend React manejará para restablecer la contraseña
         reset_url = f"http://localhost:3000/reset-password/?uid={uid}&token={token}"
 
         # Enviar correo electrónico

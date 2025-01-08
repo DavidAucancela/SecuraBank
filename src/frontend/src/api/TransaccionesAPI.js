@@ -1,4 +1,3 @@
-// frontend/src/api/TransaccionesAPI.js
 import axios from 'axios';
 
 // LISTAR todas las transacciones

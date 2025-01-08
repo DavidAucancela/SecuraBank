@@ -1,4 +1,3 @@
-# transacciones/views.py
 from django.db import transaction as db_transaction
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -6,31 +5,50 @@ from rest_framework.response import Response
 
 from .models import Transaction
 from .serializers import TransactionSerializer
-from users.models import Account  # Ajusta la importación a tu proyecto
+from users.models import Account  
 
-from rest_framework import status
-from django.db.models import Q
+from django_otp import devices_for_user
+from django_otp.plugins.otp_totp.models import TOTPDevice
+
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
+
+
 
 class TransactionViewSet(viewsets.ModelViewSet):
     """
     CRUD de transacciones
-    - list, retrieve, create, update, destroy
     """
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Limita las transacciones al usuario autenticado.
+        El usuario puede ver transacciones donde es origen o destino.
+        """
+        user = self.request.user
+        return Transaction.objects.filter(
+            cuenta_origen__user=user
+        ) | Transaction.objects.filter(
+            cuenta_destino__user=user
+        ).distinct()
 
     def create(self, request, *args, **kwargs):
-        """
-        Sobrescribimos create para:
-         - Validar saldo
-         - Ajustar saldos de origen y destino
-         - Manejar estados
-        """
-        data = request.data
-        cuenta_origen_id = data.get('cuenta_origen')
-        cuenta_destino_id = data.get('cuenta_destino')
-        monto = data.get('monto')
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
+        cuenta_origen = serializer.validated_data['cuenta_origen']
+        cuenta_destino = serializer.validated_data['cuenta_destino']
+        monto = serializer.validated_data['monto']
+
+        # Verificar que la cuenta de origen pertenece al usuario
+        if cuenta_origen.user != request.user:
+            return Response({"error": "La cuenta de origen no pertenece al usuario."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Crear la transacción con estado 'proceso'
+        transaction = serializer.save(estado='proceso')
 
         # Validación para verificar que el monto es positivo
         if float(monto) <= 0:
@@ -106,8 +124,97 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-     # Vista para revertir transacciones completadas
-    @action(detail=True, methods=['post'])
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def confirm_mfa(self, request, pk=None):
+        """
+        Endpoint para confirmar una transacción pendiente con MFA.
+        Se espera { mfa_code } en el body.
+        """
+        try:
+            transaccion = self.get_object()
+
+            # Verificar que la transacción está en estado 'proceso'
+            if transaccion.estado != 'proceso':
+                return Response(
+                    {"detail": "Solo se pueden confirmar transacciones en proceso."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Verificar que la transacción pertenece al usuario
+            if transaccion.cuenta_origen.user != request.user:
+                return Response(
+                    {"error": "No tienes permiso para confirmar esta transacción."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            mfa_code = request.data.get('mfa_code')
+
+            if not mfa_code:
+                return Response(
+                    {"error": "Se requiere un código MFA."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Obtener los dispositivos TOTP confirmados del usuario
+            devices = TOTPDevice.objects.filter(user=request.user, confirmed=True)
+            if not devices.exists():
+                return Response(
+                    {"error": "No tienes dispositivos MFA configurados."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Verificar el código MFA usando los dispositivos TOTP
+            is_valid = False
+            for device in devices:
+                if device.verify_token(mfa_code):
+                    is_valid = True
+                    break
+
+            if is_valid:
+                with db_transaction.atomic():
+                    # Bloquear las cuentas para evitar concurrencia
+                    cuenta_origen = Account.objects.select_for_update().get(pk=transaccion.cuenta_origen.pk)
+                    cuenta_destino = Account.objects.select_for_update().get(pk=transaccion.cuenta_destino.pk)
+
+                    # Verificar nuevamente el saldo antes de procesar
+                    if cuenta_origen.saldo < float(transaccion.monto):
+                        transaccion.estado = 'fallida'
+                        transaccion.save()
+                        return Response(
+                            {"detail": "Saldo insuficiente para completar la transacción."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    # Procesar la transacción
+                    cuenta_origen.saldo -= float(transaccion.monto)
+                    cuenta_destino.saldo += float(transaccion.monto)
+                    cuenta_origen.save()
+                    cuenta_destino.save()
+
+                    # Actualizar el estado de la transacción
+                    transaccion.estado = 'completada'
+                    transaccion.save()
+
+                serializer = self.get_serializer(transaccion)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"error": "Código MFA inválido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Account.DoesNotExist:
+            return Response(
+            {"detail": "La cuenta de origen o destino no existe."},
+            status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+            {"detail": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    # Vista para revertir transacciones completadas
+    @action(detail=True, methods=['post'])  
     def revertir(self, request, pk=None):
         """
         Endpoint para revertir una transacción COMPLETADA.
@@ -157,6 +264,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class TransactionHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Vista para obtener el historial de transacciones de un usuario.
@@ -165,11 +273,14 @@ class TransactionHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TransactionSerializer
 
     def get_queryset(self):
+        
+        """
         # Solo mostramos las transacciones de las cuentas del usuario logueado
         queryset = Transaction.objects.filter(
             Q(cuenta_origen__user=self.request.user) | Q(cuenta_destino__user=self.request.user)
         )
-
+        """
+        
         # Filtrar por tipo de transacción (deposito, retiro)
         transaction_type = self.request.query_params.get('transaction_type', None)
         if transaction_type:
