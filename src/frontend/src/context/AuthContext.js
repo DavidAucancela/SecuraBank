@@ -1,5 +1,3 @@
-// src/context/AuthContext.js
-
 import React, { createContext, useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode'; // Importación nombrada correcta
 
@@ -10,12 +8,14 @@ export const AuthContext = createContext();
 
 // Proveedor del contexto
 export const AuthProvider = ({ children }) => {
+  // Estado para almacenar los tokens de autenticación
   const [authTokens, setAuthTokens] = useState(() => {
     const access = localStorage.getItem('access_token');
     const refresh = localStorage.getItem('refresh_token');
     return access && refresh ? { access, refresh } : null;
   });
-
+  
+  // Estado para almacenar la información del usuario
   const [user, setUser] = useState(() => {
     if (authTokens) {
       try {
@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }) => {
     return null;
   });
 
+  // Estado para indicar si se requiere MFA
   const [isMfaRequired, setIsMfaRequired] = useState(false);
 
   // Función para iniciar sesión
@@ -136,7 +137,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('refresh_token');
   };
 
-  // Función para renovar tokens
+  // Función para renovar el token de acceso
   const updateToken = async () => {
     if (authTokens) {
       try {
@@ -156,6 +157,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Efecto para renovar el token antes de que expire
   useEffect(() => {
     let interval;
     if (authTokens) {
@@ -178,13 +180,14 @@ export const AuthProvider = ({ children }) => {
     return () => clearTimeout(interval);
   }, [authTokens]);
 
+  // Efecto para comprobar si se requiere MFA
   return (
     <AuthContext.Provider
       value={{
         user,
         authTokens,
         isMfaRequired,
-        setIsMfaRequired,
+        setIsMfaRequired, 
         loginUser,
         confirmMFA,
         logoutUser,

@@ -237,24 +237,25 @@ class PasswordResetRequestView(generics.GenericAPIView):
     """
     Solicitud de reseteo: genera un token y un uid y los manda por correo.
     """
-    serializer_class = PasswordResetRequestSerializer
+    serializer_class = PasswordResetRequestSerializer #validar que exista el email y corresponda al usuario
     permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
-        user = User.objects.get(email=email)
+        user = User.objects.get(email=email) #usuario buscado por email
 
-        token_generator = PasswordResetTokenGenerator()
-        token = token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token_generator = PasswordResetTokenGenerator() #generador de token
+        token = token_generator.make_token(user) 
+        uid = urlsafe_base64_encode(force_bytes(user.pk)) #codificar el user.pk de forma segura en el URL
 
         # URL que tu frontend React manejará para restablecer la contraseña
         reset_url = f"http://localhost:3000/reset-password/?uid={uid}&token={token}"
 
         # Enviar correo electrónico
         subject = "Restablece tu contraseña"
+        #template a un string con los datos del usuario y la url de reseteo
         message = render_to_string('password_reset_email.html', {
             'user': user,
             'reset_url': reset_url,

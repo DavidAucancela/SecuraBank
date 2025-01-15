@@ -4,15 +4,20 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 
 // Autenticación
-import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
-import PasswordReset from './components/Auth/PasswordReset';
-import PasswordResetConfirm from './components/Auth/PasswordResetConfirm';
 import MFA from './components/Auth/MFA';
 
+// Restablecer contraseña
+import PasswordReset from './components/Auth/PasswordReset';
+import PasswordResetConfirm from './components/Auth/PasswordResetConfirm';
+
+
 // Componentes principales
-import CuentasPage from './components/cuentas/CuentasPage';
 import PrivateRoute from './components/PrivateRoute';
+import Login from './components/Auth/Login';
+import Register from './components/Auth/Register';
+
+// Cuentas
+import CuentasPage from './components/cuentas/CuentasPage';
 
 // Transacciones
 import TransaccionesPage from './components/transacciones/TransaccionesPage';

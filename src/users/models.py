@@ -2,6 +2,11 @@ from django.contrib.auth.models import User
 from django.db import models
 from django_otp.models import Device
 
+#librerias para restablecer contraseña
+from django.utils.timezone import now
+import uuid
+
+
 class TOTPDevice(Device):
     """
     Dispositivo TOTP para MFA (integrado con django-otp).
@@ -39,3 +44,9 @@ class LoginAttempt(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+
+#clase para almacenar el token de restablecimiento de contraseña
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(default=now)

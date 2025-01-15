@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
+    'rest_framework_simplejwt.token_blacklist', # ista negra
 
     # TOTP (Time-based One-Time Passwords)
     'django_otp', 
@@ -125,7 +125,7 @@ CORS_ALLOW_ALL_ORIGINS = True # Solo para desarrollo. En producción, especifica
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',  # Para tokens
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Para JWT
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Para JWT 
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -134,20 +134,20 @@ REST_FRAMEWORK = {
 
 # Configuración de SimpleJWT
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Tiempo de vida del token de acceso
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Tiempo de vida del token de refresco
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Tiempo token de acceso
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # Tiempo token de refresco
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 # Configuración de correo electrónico
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desarrollo
-# Para producción, usa SMTP:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.tu_proveedor.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'tu_email@dominio.com'
-# EMAIL_HOST_PASSWORD = 'tu_contraseña'
-# DEFAULT_FROM_EMAIL = 'Tu Nombre <tu_email@dominio.com>'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desarrollo
+#Pra producción, usa SMTP:
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = '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'
+DEFAULT_FROM_EMAIL = 'david102002@hotmail.com'

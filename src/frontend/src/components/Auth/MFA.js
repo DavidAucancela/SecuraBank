@@ -15,29 +15,9 @@ const MFA = () => {
     const [token, setToken] = useState('');
     const [tokenError, setTokenError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [canResend, setCanResend] = useState(false);
-    const [resendTimer, setResendTimer] = useState(60); // Tiempo en segundos
     const [attempts, setAttempts] = useState(0);
     const [isBlocked, setIsBlocked] = useState(false);
     const [blockTimer, setBlockTimer] = useState(300); // Bloqueo por 5 minutos (300 segundos)
-
-    // Temporizador para habilitar el botón de reenviar
-    useEffect(() => {
-        let timer;
-        if (!canResend) {
-            timer = setInterval(() => {
-                setResendTimer(prev => {
-                    if (prev <= 1) {
-                        clearInterval(timer);
-                        setCanResend(true);
-                        return 60;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-        return () => clearInterval(timer);
-    }, [canResend]);
 
     // Temporizador para desbloquear MFA después del bloqueo
     useEffect(() => {
@@ -57,43 +37,6 @@ const MFA = () => {
         }
         return () => clearInterval(blockTimerInterval);
     }, [isBlocked]);
-
-    // Función para reenviar el código MFA
-    const resendMfaCode = async () => {
-        try {
-            const response = await axios.get('http://localhost:8000/api/users/mfa/resend/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                },
-            });
-
-            if (response.status === 200) {
-                Swal.fire({
-                    title: 'Éxito',
-                    text: 'Código MFA reenviado correctamente.',
-                    icon: 'success',
-                    confirmButtonText: 'OK',
-                });
-                setCanResend(false);
-                setResendTimer(60);
-            } else {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'No se pudo reenviar el código MFA.',
-                    icon: 'error',
-                    confirmButtonText: 'OK',
-                });
-            }
-        } catch (error) {
-            console.error('Error al reenviar código MFA:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'No se pudo reenviar el código MFA.',
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        }
-    };
 
     // Validamos manualmente antes de enviar
     const validateFields = () => {
@@ -161,10 +104,13 @@ const MFA = () => {
                 <div className="col-md-6">
                     <div className="card mt-5">
                         <div className="card-body">
-                            <h2 className="text-center mb-4">Verificación MFA</h2>
+                            <h3 className="text-center mb-4">Verificación MFA Autentificación</h3>
+                            <p>
+                                Ingresa el token MFA que recibiste en tu dispositivo de autenticación.
+                            </p>
                             <form onSubmit={handleSubmit}>
 
-                                {/* Campo Token MFA */}
+                                {/*ingreso Token MFA */}
                                 <div className="mb-3">
                                     <label htmlFor="token" className="form-label">Token MFA</label>
                                     <input
@@ -181,7 +127,7 @@ const MFA = () => {
                                     )}
                                 </div>
 
-                                {/* Botón con spinner */}
+                                {/*verificar con spinner */}
                                 <button
                                     type="submit"
                                     className="btn btn-primary w-100 mb-2"
@@ -201,17 +147,7 @@ const MFA = () => {
                                     )}
                                 </button>
 
-                                {/* Botón para reenviar código MFA */}
-                                <button
-                                    type="button"
-                                    className="btn btn-secondary w-100 mb-2"
-                                    onClick={resendMfaCode}
-                                    disabled={!canResend || isBlocked}
-                                >
-                                    {canResend ? 'Reenviar Código MFA' : `Reenviar en ${resendTimer}s`}
-                                </button>
-
-                                {/* Botón Cancelar */}
+                                {/*Cancelar */}
                                 <button
                                     type="button"
                                     className="btn btn-danger w-100"
@@ -221,12 +157,6 @@ const MFA = () => {
                                     Cancelar
                                 </button>
                             </form>
-
-                            <div className="text-center mt-3">
-                                <p>
-                                    <Link to="/login">Volver al Login</Link>
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
