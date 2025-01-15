@@ -1,6 +1,7 @@
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
+import os
 
 # Ruta base
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -148,6 +149,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'apikey'
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+#EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = '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'
 DEFAULT_FROM_EMAIL = 'david102002@hotmail.com'
