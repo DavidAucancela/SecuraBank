@@ -1,4 +1,4 @@
-// frontend/src/components/transacciones/TransaccionForm.jsx
+// src/components/transacciones/TransaccionForm.js
 import React, { useState } from 'react';
 import { crearTransaccion } from '../../api/TransaccionesAPI';
 
@@ -21,9 +21,11 @@ function TransaccionForm() {
         alert('Transacción fallida (saldo insuficiente o error).');
       } else if (nuevaTx.estado === 'completada') {
         alert('Transacción creada con éxito.');
+      } else {
+        alert('Estado de la transacción: ' + nuevaTx.estado);
       }
 
-      // Reset form
+      // Limpiar formulario
       setCuentaOrigen('');
       setCuentaDestino('');
       setMonto('');

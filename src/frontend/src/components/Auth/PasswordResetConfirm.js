@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../../api';
+import api from '../../api/UsuariosAPI';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import zxcvbn from 'zxcvbn';
 

@@ -1,13 +1,13 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode'; // Importación nombrada correcta
-
-import axios from 'axios';
+import axios from 'axios'; // Importación de axios para realizar peticiones HTTP
 
 // Crear el contexto
 export const AuthContext = createContext();
 
 // Proveedor del contexto
 export const AuthProvider = ({ children }) => {
+
   // Estado para almacenar los tokens de autenticación
   const [authTokens, setAuthTokens] = useState(() => {
     const access = localStorage.getItem('access_token');
@@ -36,10 +36,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.post(
         'http://localhost:8000/api/users/login/',
-        { 
-          username, 
-          password 
-        }
+        { username, password }
       );
 
       if (res.status === 200) {
@@ -165,7 +162,6 @@ export const AuthProvider = ({ children }) => {
         const decoded = jwtDecode(authTokens.access);
         const expiresAt = decoded.exp * 1000;
         const tiempoRestante = expiresAt - Date.now();
-
         const refrescarEn = tiempoRestante - 60000; // Renovar 1 minuto antes de expirar
         if (refrescarEn > 0) {
           interval = setTimeout(() => {

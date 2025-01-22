@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../../api';
+import api from '../../api/UsuariosAPI';
 import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 

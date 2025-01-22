@@ -1,4 +1,4 @@
-// frontend/src/components/transacciones/TransaccionesList.jsx
+// src/components/transacciones/TransaccionesList.js
 import React, { useState, useEffect } from 'react';
 import { fetchTransacciones, revertirTransaccion } from '../../api/TransaccionesAPI';
 
@@ -11,7 +11,7 @@ function TransaccionesList() {
 
   const cargarTransacciones = async () => {
     try {
-      const data = await fetchTransacciones();
+      const data = await fetchTransacciones(); // sin cuenta_id
       setTransacciones(data);
     } catch (error) {
       console.error("Error al cargar transacciones:", error);
@@ -21,8 +21,7 @@ function TransaccionesList() {
   const handleRevertir = async (id) => {
     try {
       const resultado = await revertirTransaccion(id);
-      alert(`Transacción revertida. Estado: ${resultado.estado}`);
-      // Recargar la lista
+      alert(`Transacción revertida. Estado actual: ${resultado.estado}`);
       cargarTransacciones();
     } catch (error) {
       console.error("Error al revertir:", error);
@@ -48,8 +47,8 @@ function TransaccionesList() {
           {transacciones.map((tx) => (
             <tr key={tx.id}>
               <td>{tx.id}</td>
-              <td>{tx.cuenta_origen}</td>
-              <td>{tx.cuenta_destino}</td>
+              <td>{tx.cuenta_origen.account_number}</td>
+              <td>{tx.cuenta_destino.account_number}</td>
               <td>{tx.monto}</td>
               <td>{tx.estado}</td>
               <td>
@@ -58,7 +57,7 @@ function TransaccionesList() {
                     Revertir
                   </button>
                 )}
-                {/* Si quieres más acciones, agrégalas aquí */}
+                {/* Otras acciones */}
               </td>
             </tr>
           ))}

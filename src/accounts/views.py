@@ -38,7 +38,10 @@ class AccountViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
    
     def perform_create(self, serializer):
-        # Generar un número de cuenta único, puedes usar UUID o cualquier lógica preferida
         import uuid
+        # Generar un número de cuenta único
         account_number = str(uuid.uuid4()).replace('-', '')[:12].upper()
-        serializer.save(user=self.request.user, account_number=account_number)
+        serializer.save(
+            user=self.request.user, 
+            account_number=account_number
+        )

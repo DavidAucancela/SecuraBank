@@ -2,7 +2,7 @@ from rest_framework.routers import DefaultRouter
 from .views import AccountViewSet
 
 router = DefaultRouter()
-router.register(r'accounts', AccountViewSet, basename='accounts')
+# Registrar sin sub-ruta, para que sea /api/cuentas/ para la lista y /api/cuentas/{pk}/ para detalles
+router.register(r'', AccountViewSet, basename='accounts')
 
-#router para registrar las vistas
 urlpatterns = router.urls

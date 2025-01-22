@@ -6,7 +6,7 @@ from django_otp.models import Device
 from django.utils.timezone import now
 import uuid
 
-
+#clase para almacenar los dispositivos TOTP
 class TOTPDevice(Device):
     """
     Dispositivo TOTP para MFA (integrado con django-otp).
@@ -23,7 +23,7 @@ class TOTPDevice(Device):
     def __str__(self):
         return f"{self.user.username} - {self.name}"
 
-#
+#cuenta de usuario
 class Account(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  
     numero_cuenta = models.CharField(max_length=50, unique=True)
@@ -32,7 +32,7 @@ class Account(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.numero_cuenta}"
 
-
+#clase para almacenar los intentos de inicio de sesión
 class LoginAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='login_attempts')
     timestamp = models.DateTimeField(auto_now_add=True)

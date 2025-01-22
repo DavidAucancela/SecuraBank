@@ -1,6 +1,8 @@
+// src/components/cuentas/CuentasPage.js
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { fetchCuentas, crearCuenta, eliminarCuenta } from '../../api/CuentasAPI';
+import { Link } from 'react-router-dom';
 
 const CuentasPage = () => {
   const [accountNumber, setAccountNumber] = useState('');
@@ -41,8 +43,6 @@ const CuentasPage = () => {
 
     setLoading(true);
     try {
-          // Verificar la URL de la API y los datos
-
       const nueva = await crearCuenta(accountNumber);
       Swal.fire('Cuenta creada', `Se ha creado la cuenta ${nueva.account_number}`, 'success');
       setAccountNumber('');
@@ -136,13 +136,14 @@ const CuentasPage = () => {
                   <th>ID</th>
                   <th>Número de Cuenta</th>
                   <th>Saldo</th>
-                  <th>Acciones</th>
+                  <th>Modificar</th>
+                  <th>Eliminar</th>
                 </tr>
               </thead>
               <tbody>
                 {cuentas.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="text-center">
+                    <td colSpan="5" className="text-center">
                       No tienes cuentas registradas
                     </td>
                   </tr>
@@ -152,6 +153,12 @@ const CuentasPage = () => {
                       <td>{cuenta.id}</td>
                       <td>{cuenta.account_number}</td>
                       <td>{cuenta.saldo}</td>
+                      <td>
+                        {/* Link hacia la vista de transacciones de esta cuenta */}
+                        <Link to={`/cuentas/${cuenta.id}`} className="btn btn-primary btn-sm me-2">
+                          Ver transacciones
+                        </Link>
+                      </td>
                       <td>
                         <button
                           className="btn btn-danger btn-sm"

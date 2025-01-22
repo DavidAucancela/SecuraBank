@@ -4,7 +4,13 @@ import { AuthContext } from '../context/AuthContext';
 
 const PrivateRoute = ({ children }) => {
     const { user } = useContext(AuthContext);
-    return user ? children : <Navigate to="/login" />;
-};
-
+  
+    // Si no hay usuario, redirige a /login
+    if (!user) {
+      return <Navigate to="/login" />;
+    }
+  
+    // Si está logueado, muestra el contenido
+    return children;
+  };
 export default PrivateRoute;

@@ -21,6 +21,8 @@ urlpatterns = [
 
     # Login (JWT)
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+
+    # Refresh token
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # MFA
