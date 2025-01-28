@@ -1,5 +1,3 @@
-# users/views.py
-
 from io import BytesIO
 
 from django.contrib.auth.models import User
@@ -12,7 +10,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils import timezone
 from datetime import timedelta
 
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -31,7 +29,8 @@ from .serializers import (
     CustomTokenObtainPairSerializer, 
     TOTPDeviceSerializer,
     PasswordResetRequestSerializer,
-    PasswordResetConfirmSerializer
+    PasswordResetConfirmSerializer,
+    UserSerializer
 )
 
 from .models import LoginAttempt
@@ -276,3 +275,11 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"detail": "Contraseña restablecida correctamente."}, status=status.HTTP_200_OK)
+
+# ========== USUARIOS ==========
+class UserRetrieveUpdateView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user

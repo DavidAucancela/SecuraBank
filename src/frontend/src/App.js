@@ -52,8 +52,9 @@ function App() {
             element={
               <PrivateRoute>
                 <Layout>
-                  {/* <ConfiguracionPage />  Descomenta si tienes un componente real */}
-                  <h2>Página de Configuración (ejemplo)</h2>
+                  <PasswordResetConfirm />
+
+
                 </Layout>
               </PrivateRoute>
             }

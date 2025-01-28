@@ -1,4 +1,3 @@
-// src/components/cuentas/CuentasPage.js
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { fetchCuentas, crearCuenta, eliminarCuenta } from '../../api/CuentasAPI';
@@ -36,6 +35,7 @@ const CuentasPage = () => {
     }
     return valid;
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

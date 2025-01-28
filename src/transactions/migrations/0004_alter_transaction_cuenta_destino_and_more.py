@@ -8,7 +8,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('accounts', '0002_account_created_at_alter_account_saldo'),
-        ('transacciones', '0003_transaction_delete_transaccion'),
+        ('transactions', '0003_transaction_delete_transaction'),
+
     ]
 
     operations = [

@@ -7,6 +7,8 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = '__all__'
 
+    #donde se aplica ?
+    #Se aplica en el método create() del viewset TransactionViewSet
     def validate(self, attrs):
         origen = attrs.get('cuenta_origen')
         destino = attrs.get('cuenta_destino')

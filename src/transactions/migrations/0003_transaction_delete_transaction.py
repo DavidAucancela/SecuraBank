@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('transacciones', '0002_transaccion_estado_transaccion_moneda_and_more'),
+        ('transactions', '0002_transaction_estado_transaction_moneda_and_more'),
         ('users', '0002_account'),
     ]
 
@@ -20,11 +20,11 @@ class Migration(migrations.Migration):
                 ('monto', models.DecimalField(decimal_places=2, max_digits=10)),
                 ('fecha', models.DateTimeField(default=django.utils.timezone.now)),
                 ('estado', models.CharField(choices=[('proceso', 'En proceso'), ('completada', 'Completada'), ('fallida', 'Fallida'), ('revertida', 'Revertida')], default='proceso', max_length=10)),
-                ('cuenta_destino', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transacciones_entrada', to='users.account')),
-                ('cuenta_origen', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transacciones_salida', to='users.account')),
+                ('cuenta_destino', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transactions_entrada', to='users.account')),
+                ('cuenta_origen', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='transactions_salida', to='users.account')),
             ],
         ),
         migrations.DeleteModel(
-            name='Transaccion',
+            name='transaction',
         ),
     ]

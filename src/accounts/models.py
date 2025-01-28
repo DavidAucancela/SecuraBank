@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 class Account(models.Model):
-    # estados de la cuenta
     STATUS_CHOICES  = (
         ('activa', 'Activa'),
         ('inactiva', 'Inactiva'),
@@ -13,7 +12,7 @@ class Account(models.Model):
     name = models.CharField(max_length=100, default='Cuenta Principal')  
 
     account_number = models.CharField(max_length=30, unique=True)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='activa')
+    estado = models.CharField(max_length=50, choices=STATUS_CHOICES, default='activa')
     saldo = models.DecimalField(max_digits=10, decimal_places=2, default=125.00) #saldo inicial
     created_at = models.DateTimeField(default=timezone.now)
 

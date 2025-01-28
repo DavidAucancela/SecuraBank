@@ -9,7 +9,8 @@ const TransaccionesPage = () => {
   const { id } = useParams(); // p.ej. /cuentas/7 -> id=7
 
   // 2) Estados del formulario
-  const [cuentaOrigen, setCuentaOrigen] = useState(id || '');
+  const [cuentaOrigen] = useState(id || '');
+  //const [setOrigen] = useState(id || '');
   const [cuentaDestino, setCuentaDestino] = useState('');
   const [monto, setMonto] = useState('');
 

@@ -1,16 +1,16 @@
-# transacciones/views.py
 from django.db import transaction as db_transaction
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-
 from django.db.models import Q
+
+from django_otp.plugins.otp_totp.models import TOTPDevice
+
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .models import Transaction
 from .serializers import TransactionSerializer
-from users.models import Account  # Ajusta según tu proyecto
-from django_otp.plugins.otp_totp.models import TOTPDevice  # Para MFA, si lo usas
+from users.models import Account
 
 class TransactionViewSet(viewsets.ModelViewSet):
     """

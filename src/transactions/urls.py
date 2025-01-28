@@ -1,9 +1,13 @@
+
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework import routers
 from .views import TransactionViewSet, TransactionHistoryViewSet
 
-router = DefaultRouter()
+router = routers.DefaultRouter()
+# Registrar para que sea /api/transacciones/ para la lista y /api/transacciones/{pk}/ para detalles
 router.register(r'transactions', TransactionViewSet, basename='transactions')
 router.register(r'transactions-history', TransactionHistoryViewSet, basename='transactions-history')
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('', include(router.urls)),
+]

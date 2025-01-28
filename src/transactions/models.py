@@ -1,8 +1,8 @@
-# transacciones/models.py
 from django.db import models
 from django.utils import timezone
-from users.models import Account  # Ajusta según tu proyecto (App "users" o "accounts")
+from users.models import Account  # Importamos el modelo Account del módulo users
 
+# definir aca para poder utilizarlo en el modelo Transaction
 STATUS_CHOICES = (
     ('proceso', 'En proceso'),
     ('completada', 'Completada'),
@@ -11,9 +11,7 @@ STATUS_CHOICES = (
 )
 
 class Transaction(models.Model):
-    """
-    Modelo que representa una transacción entre dos cuentas.
-    """
+    # Relacionamos la transacción con las cuentas de origen y destino
     cuenta_origen = models.ForeignKey(
         Account,
         related_name='transactions_origin',
@@ -30,6 +28,7 @@ class Transaction(models.Model):
 
     def __str__(self):
         return (
+            # Mostramos la información de la transacción en el admin de Django
             f"Transacción de {self.cuenta_origen} a {self.cuenta_destino} "
             f"por {self.monto}, estado: {self.estado}"
         )

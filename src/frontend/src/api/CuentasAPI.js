@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL base para la API de Cuentas (ajusta el puerto/protocolo si es necesario)
-const BASE_URL = 'http://localhost:8000/api/cuentas/';
+const BASE_URL = 'http://localhost:8000/api/accounts/';
 
 const cuentasApi = axios.create({
   baseURL: BASE_URL,

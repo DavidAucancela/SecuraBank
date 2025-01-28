@@ -23,17 +23,17 @@ INSTALLED_APPS = [
     
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist', # ista negra
+    'rest_framework_simplejwt.token_blacklist', # lista negra
 
     # TOTP (Time-based One-Time Passwords)
     'django_otp', 
     'django_otp.plugins.otp_totp',
 
+    # se puede poner dos formas de especficiar rutas de las apps
+    # 'users.apps.UsersConfig', al poner .apps.Config aumentan las opciones de configuracion
+    'transactions.apps.TransactionsConfig', 
+    'accounts.apps.AccountsConfig',
     'users.apps.UsersConfig',
-    #'transacciones.apps.TransaccionesConfig', #parte de seguridad
-    'transacciones',
-    #'accounts.apps.AccountsConfig', #parte de seguridad
-    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -49,6 +49,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
 ]
+
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -144,3 +145,10 @@ SIMPLE_JWT = {
 # Configuración de correo electrónico
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desarrollo
 #Pra producción, usa SMTP:
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = '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'
+DEFAULT_FROM_EMAIL = 'david102002@hotmail.com'

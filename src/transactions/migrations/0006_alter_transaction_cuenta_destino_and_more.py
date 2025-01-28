@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('transacciones', '0005_remove_transaction_fecha_transaction_created_at_and_more'),
+        ('transactions', '0005_remove_transaction_fecha_transaction_created_at_and_more'),
         ('users', '0004_passwordresettoken'),
     ]
 
