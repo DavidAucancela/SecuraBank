@@ -1,45 +1,60 @@
-// transaccionesAPI.js
 import axios from 'axios';
 
-// La URL base debe apuntar a transacciones
-const BASE_URL = 'http://127.0.0.1:8000/api/transactions/';
+const API_URL = 'http://localhost:8000/api/transactions/';
 
-// LISTAR todas (o filtrar por cuenta) las transacciones
-export const fetchTransacciones = async (cuentaId) => {
-  // Endpoint base -> /api/transacciones/transactions/
-  let url = `${BASE_URL}transactions/`;
-  // Si quieres filtrar por cuenta -> ?cuenta_id=XYZ
-  if (cuentaId) {
-    url += `?cuenta_id=${cuentaId}`;
+// Función para obtener el token desde el contexto o localStorage
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Realizar una transferencia
+export const realizarTransferencia = async (transferData) => {
+  const token = getAuthToken();
+  const config = {
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+      },
+  };
+
+  try {
+      const response = await axios.post(`${API_URL}realizar_transferencia/`, transferData, config);
+      return response.data;
+  } catch (error) {
+      throw error.response ? error.response.data : error;
   }
-
-  const res = await axios.get(url, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`, 
-    },
-  });
-  return res.data;
 };
 
-// CREAR una transacción
-export const crearTransaccion = async (data) => {
-  // data => { cuenta_origen, cuenta_destino, monto }
-  // POST /api/transacciones/transactions/
-  const res = await axios.post(`${BASE_URL}transactions/`, data, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  });
-  return res.data;
+// Obtener todas las transacciones del usuario
+export const getTransactions = async () => {
+  const token = getAuthToken();
+  const config = {
+      headers: {
+          'Authorization': `Bearer ${token}`,
+      },
+  };
+
+  try {
+      const response = await axios.get(`${API_URL}`, config);
+      return response.data;
+  } catch (error) {
+      throw error.response ? error.response.data : error;
+  }
 };
 
-// REVERTIR una transacción (solo superuser)
-export const revertirTransaccion = async (id) => {
-  // POST /api/transacciones/transactions/:id/revertir/
-  const res = await axios.post(`${BASE_URL}transactions/${id}/revertir/`, null, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  });
-  return res.data;
+// Obtener las cuentas del usuario
+export const getUserAccounts = async () => {
+  const token = getAuthToken();
+  const config = {
+      headers: {
+          'Authorization': `Bearer ${token}`,
+      },
+  };
+
+  try {
+      const response = await axios.get('http://localhost:8000/api/accounts/', config); // Aquí puedes cambiar la URL según tu backend
+      return response.data;
+  } catch (error) {
+      throw error.response ? error.response.data : error;
+  }
 };

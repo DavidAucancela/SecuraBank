@@ -2,9 +2,18 @@ from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction as db_transaction
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from .models import Account
 from .serializers import AccountSerializer
+
+@api_view(['GET'])
+def get_user_accounts(request):
+    user = request.user  
+    accounts = Account.objects.filter(user=user)  
+    serializer = AccountSerializer(accounts, many=True)
+    return Response(serializer.data)
 
 class AccountViewSet(viewsets.ModelViewSet):
     """
@@ -45,3 +54,5 @@ class AccountViewSet(viewsets.ModelViewSet):
             user=self.request.user, 
             account_number=account_number
         )
+
+    

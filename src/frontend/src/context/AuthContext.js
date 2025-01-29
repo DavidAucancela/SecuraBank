@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode'; // Importación nombrada correcta
+import { jwtDecode } from 'jwt-decode'; 
 import axios from 'axios'; // Importación de axios para realizar peticiones HTTP
 
 // Crear el contexto
@@ -174,7 +174,8 @@ export const AuthProvider = ({ children }) => {
       }
     }
     return () => clearTimeout(interval);
-  }, [authTokens]);
+  // Dependencias faltantes agregadas
+});  // Agregar las funciones al array de dependencias
 
   // Efecto para comprobar si se requiere MFA
   return (

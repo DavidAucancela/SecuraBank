@@ -31,9 +31,9 @@ INSTALLED_APPS = [
 
     # se puede poner dos formas de especficiar rutas de las apps
     # 'users.apps.UsersConfig', al poner .apps.Config aumentan las opciones de configuracion
-    'transactions.apps.TransactionsConfig', 
     'accounts.apps.AccountsConfig',
     'users.apps.UsersConfig',
+    'transacciones.apps.TransaccionesConfig',
 ]
 
 MIDDLEWARE = [

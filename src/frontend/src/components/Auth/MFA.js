@@ -1,8 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import axios from 'axios';
+
 
 const MFA = () => {
     const { confirmMFA } = useContext(AuthContext);

@@ -184,12 +184,16 @@ def confirm_mfa(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def mfa_status(request):
-    """
-    Indica si el usuario tiene MFA configurado (TOTPDevice confirmado).
-    """
     user = request.user
-    has_confirmed_mfa = TOTPDevice.objects.filter(user=user, confirmed=True).exists()
-    return Response({'mfa_required': has_confirmed_mfa}, status=status.HTTP_200_OK)
+    device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
+
+    if device:
+        return Response({
+            'mfa_enabled': True,
+            'device_name': device.name,
+            'confirmed': device.confirmed,
+        })
+    return Response({'mfa_enabled': False}, status=status.HTTP_404_NOT_FOUND)
 
 # revisar si borrar esta vista
 @api_view(['GET'])
@@ -201,19 +205,19 @@ def resend_mfa_code(request):
     """
     user = request.user
     device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
-    if device:
-        # Enviar el QR nuevamente
+    if device and not device.confirmed:
         qr_url = device.config_url
         img = qrcode.make(qr_url, image_factory=qrcode.image.svg.SvgImage)
         buffer = BytesIO()
         img.save(buffer)
         svg = buffer.getvalue().decode()
         return Response({
-            'qr_code': svg,
+            'qr_code': svg, 
             'secret': device.bin_key
-        }, status=status.HTTP_200_OK)
+        })
     else:
-        return Response({'detail': 'MFA no está configurado.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': 'MFA ya está configurado o dispositivo confirmado.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # ========== LOGOUT ==========
 class LogoutView(APIView):
