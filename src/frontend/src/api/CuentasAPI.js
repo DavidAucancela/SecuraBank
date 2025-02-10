@@ -58,16 +58,25 @@ export const fetchCuentas = async () => {
   return response.data;
 };
 
-/** Crea una nueva cuenta (solo necesita account_number) */
-export const crearCuenta = async (accountNumber) => {
-  const response = await cuentasApi.post('/', { account_number: accountNumber });
+/** Crea una nueva cuenta */
+export const crearCuenta = async (accountNumber, token) => {
+  const response = await cuentasApi.post('/', { account_number: accountNumber }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 
+
 /** Elimina una cuenta por ID */
-export const eliminarCuenta = async (id) => {
-  const response = await cuentasApi.delete(`/${id}/`);
-  return response.data;
+export const eliminarCuenta = async (id, token) => {
+  const response = await cuentasApi.delete(`/${id}/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+    return response.data;
 };
 
 // (Opcional) Podrías exportar otras funciones para editar, depositar, retirar, etc.

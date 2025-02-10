@@ -15,8 +15,9 @@ class Account(models.Model):
     estado = models.CharField(max_length=50, choices=STATUS_CHOICES, default='activa')
     saldo = models.DecimalField(max_digits=10, decimal_places=2, default=125.00) #saldo inicial
     created_at = models.DateTimeField(default=timezone.now)
+    owner = models.CharField(max_length=150, blank=True, null=True)
 
 
     def __str__(self):
         #revisar si se debe enviar username o name en el return
-        return f"{self.user.username} - {self.account_number}"
+        return f"{self.name} - {self.account_number}"

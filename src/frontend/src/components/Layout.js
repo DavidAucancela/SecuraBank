@@ -81,7 +81,6 @@ const Layout = ({ children }) => {
 
       {/* Contenedor principal */}
       <div className="container my-4 flex-grow-1">
-        {/* Bienvenida (Opcional). Muestra usuario si existe */}
         {user && (
           <div className="mb-4">
             <h4 className="fw-semibold">Bienvenido, {user.username || 'Usuario'}</h4>

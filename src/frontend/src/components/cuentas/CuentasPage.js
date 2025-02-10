@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { fetchCuentas, crearCuenta, eliminarCuenta } from '../../api/CuentasAPI';
-import { Link } from 'react-router-dom';
 
 const CuentasPage = () => {
   const [accountNumber, setAccountNumber] = useState('');
@@ -35,7 +34,6 @@ const CuentasPage = () => {
     }
     return valid;
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -136,7 +134,7 @@ const CuentasPage = () => {
                   <th>ID</th>
                   <th>Número de Cuenta</th>
                   <th>Saldo</th>
-                  <th>Modificar</th>
+                  <th>Estado</th>
                   <th>Eliminar</th>
                 </tr>
               </thead>
@@ -153,12 +151,7 @@ const CuentasPage = () => {
                       <td>{cuenta.id}</td>
                       <td>{cuenta.account_number}</td>
                       <td>{cuenta.saldo}</td>
-                      <td>
-                        {/* Link hacia la vista de transacciones de esta cuenta */}
-                        <Link to={`/cuentas/${cuenta.id}`} className="btn btn-primary btn-sm me-2">
-                          Ver transacciones
-                        </Link>
-                      </td>
+                      <td>{cuenta.estado === 'activa' ? 'Activa' : 'Inactiva'}</td>
                       <td>
                         <button
                           className="btn btn-danger btn-sm"

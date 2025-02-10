@@ -27,31 +27,7 @@ function App() {
           {/* Rutas privadas */}
           <Route path="/cuentas" element={<PrivateRoute><Layout><CuentasPage /></Layout></PrivateRoute>} />
           <Route path="/transacciones" element={<PrivateRoute><Layout><TransactionPage/></Layout></PrivateRoute>} />
-
-          {/*
-          <Route
-            path="/transacciones"
-            element={
-              <PrivateRoute>
-                <Layout>
-                  <TransaccionesPage/>
-                </Layout>
-              </PrivateRoute>
-            }
-          />
-*/}
-          <Route
-            path="/configuracion"
-            element={
-              <PrivateRoute>
-                <Layout>
-                  <PasswordResetConfirm />
-
-
-                </Layout>
-              </PrivateRoute>
-            }
-          />
+          <Route path="/configuracion" element={<PrivateRoute><Layout><PasswordResetConfirm /></Layout></PrivateRoute> }/>
 
           {/* Redirección de la raíz al login */}
           <Route path="/" element={<Navigate to="/login" />} />

@@ -2,64 +2,101 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from .models import Transaccion
-from .serializers import TransaccionSerializer
+from rest_framework.decorators import api_view, permission_classes
+from .models import Transaction
+from .serializers import TransactionSerializer
 from django.contrib.auth.models import User
 from accounts.models import Account
+from django_otp.models import Device  # Si usas django-otp para MFA
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 # MFA
 from django_otp.models import Device
 from users.utils import verify_mfa_code  
 
-# si el monto es +500
+#DB
+from django.db import transaction as db_transaction
+
 class RealizarTransferenciaView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        """
-        Realiza una transferencia entre cuentas. Si el monto supera los 500, se requiere MFA.
-        """
         usuario = request.user
         monto = request.data.get('monto')
-        cuenta_origen = request.data.get('cuenta_origen')
-        cuenta_destino = request.data.get('cuenta_destino')
+        from_account_id = request.data.get('cuenta_origen')   # ID de la cuenta origen
+        to_account_id  = request.data.get('cuenta_destino') # ID de la cuenta destino
 
-        # Validaciones básicas de datos
-        if not monto or not cuenta_origen or not cuenta_destino:
-            return Response({'detail': 'Faltan datos para la transferencia.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not monto or not from_account_id or not to_account_id :
+            return Response({'detail': 'Faltan datos para la transferencia.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
+        # Convertir a float/Decimal
         monto = float(monto)
 
-        # Verificar que la cuenta de destino existe
+        # 1) Verificar que la cuenta de origen existe y que pertenece al usuario
         try:
-            cuenta_destino_usuario = User.objects.get(id=cuenta_destino)
-        except User.DoesNotExist:
-            return Response({'detail': 'Cuenta de destino no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+            from_account = Account.objects.get(id=from_account_id, user=usuario)
+        except Account.DoesNotExist:
+            return Response({'detail': 'La cuenta de origen no existe o no te pertenece.'},
+                            status=status.HTTP_404_NOT_FOUND)
 
-        # Verificar si el monto supera 500, en cuyo caso se requiere MFA
+        # 2) Verificar que la cuenta de destino existe
+        try:
+            to_account = Account.objects.get(id=to_account_id )
+        except Account.DoesNotExist:
+            return Response({'detail': 'La cuenta de destino no existe.'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        # Verificar saldo suficiente
+        if from_account.saldo < monto:
+            return Response({'detail': 'Fondos insuficientes en la cuenta origen.'},
+                           status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar MFA si el monto supera 500
         if monto > 500:
             device = Device.objects.filter(user=usuario, confirmed=True).first()
             if not device:
-                return Response({'detail': 'No tienes un dispositivo MFA confirmado.'}, status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    {'detail': 'No tienes un dispositivo MFA confirmado.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
-            # Verificar el código MFA
             mfa_code = request.data.get('mfa_code')
             if not mfa_code:
-                return Response({'detail': 'Se requiere un código MFA para esta transacción.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'detail': 'Se requiere un código MFA para esta transacción.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             if not device.verify_token(mfa_code):
-                return Response({'detail': 'Código MFA inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'detail': 'Código MFA inválido.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+        # Realizar la transferencia de manera atómica
+        with db_transaction.atomic():
+            # Crear la transacción
+            transaccion = Transaction.objects.create(
+                user=usuario,
+                from_account=from_account,
+                to_account=to_account,
+                monto=monto,
+                moneda=request.data.get('moneda', 'USD'),
+                transa_ubicacion=request.data.get('transa_ubicacion', ''),
+                estado='completada'
+            )
 
-        # Crear la transacción
-        transaccion = Transaccion.objects.create(
-            id_usuario=usuario,
-            monto=monto,
-            moneda=request.data.get('moneda', 'USD'),
-            ubicacion=request.data.get('ubicacion'),
-            estado='completada'
+            # Actualizar los saldos
+            from_account.saldo -= monto
+            to_account.saldo += monto
+            from_account.save()
+            to_account.save()
+
+        return Response(
+            {'detail': 'Transferencia realizada exitosamente.', 'transaccion_id': transaccion.id},
+            status=status.HTTP_200_OK
         )
-
-        return Response({'detail': 'Transferencia realizada exitosamente.', 'transaccion_id': transaccion.id}, status=status.HTTP_200_OK)
 
 class CreateTransaccionView(APIView):
     permission_classes = [IsAuthenticated]
@@ -104,7 +141,7 @@ class CreateTransaccionView(APIView):
             return Response({'error': 'Fondos insuficientes en la cuenta origen.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Crear la transacción
-        transaccion = Transaccion.objects.create(
+        transaccion = Transaction.objects.create(
             id_usuario=request.user,
             from_account=from_account,
             to_account=to_account,
@@ -120,5 +157,33 @@ class CreateTransaccionView(APIView):
         from_account.save()
         to_account.save()
 
-        serializer = TransaccionSerializer(transaccion)
+        serializer = TransactionSerializer(transaccion)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+class ListarTransaccionesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Lista todas las transacciones del usuario autenticado.
+        """
+        usuario = request.user
+        transacciones = Transaction.objects.filter(user=usuario).order_by('-fecha')
+        serializer = TransactionSerializer(transacciones, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_transfer_mfa(request):
+    """
+    Verifica el código MFA para transferencias.
+    """
+    mfa_code = request.data.get('mfa_code')
+    if not mfa_code:
+        return Response({'detail': 'Se requiere un código MFA.'}, status=400)
+    
+    device = TOTPDevice.objects.filter(user=request.user, confirmed=True).first()
+    if device and device.verify_token(mfa_code):
+        return Response({'detail': 'Código MFA válido.'}, status=200)
+    else:
+        return Response({'detail': 'Código MFA inválido.'}, status=400)

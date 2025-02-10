@@ -24,13 +24,12 @@ class TOTPDevice(Device):
         return f"{self.user.username} - {self.name}"
 
 #cuenta de usuario
-class Account(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)  
-    numero_cuenta = models.CharField(max_length=50, unique=True)
-    saldo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.numero_cuenta}"
+#class Account(models.Model):
+#    user = models.OneToOneField(User, on_delete=models.CASCADE)  
+#    numero_cuenta = models.CharField(max_length=50, unique=True)
+#    saldo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+#   def __str__(self):
+#        return f"{self.user.username} - {self.numero_cuenta}"
 
 #clase para almacenar los intentos de inicio de sesión
 class LoginAttempt(models.Model):

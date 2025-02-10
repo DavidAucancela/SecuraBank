@@ -2,11 +2,13 @@ from rest_framework import serializers
 from .models import Account
 
 class AccountSerializer(serializers.ModelSerializer):
+    owner = serializers.SerializerMethodField()  # Campo virtual que no existe en la BD
+
+
     class Meta:
         model = Account
-  
-        fields = '__all__'
-        #fields = ['id', 'account_number', 'saldo', 'created_at']
-        # para que sirve read_only_fields?
-        # read_only_fields es un atributo de la clase Meta que permite definir los campos que no se pueden modificar en la instancia del modelo.
-        # read_only_fields = ['id', 'saldo', 'created_at']
+        fields = ['id', 'account_number', 'saldo', 'created_at', 'name', 'estado', 'owner']
+        read_only_fields = ['id', 'account_number', 'saldo', 'created_at']
+
+    def get_owner(self, obj):
+        return obj.user.username

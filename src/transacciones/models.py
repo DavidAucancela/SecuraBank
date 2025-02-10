@@ -18,30 +18,35 @@ CURRENCY_CHOICES = [
     ('SEK', 'Corona sueca'),
 ]
 
-class Transaccion (models.Model):
+class Transaction(models.Model):
     ESTADOS = (
         ('proceso', 'Proceso'),
         ('completada', 'Completada'),
         ('fallida', 'Fallida'),
         ('revertida', 'Revertida'),
     )
-    # id_transaccion -> será el "id" por defecto de Django
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='Transacciones'
+        related_name='Transacciones',
+        default=1  
+
     )
     # usario - cuentas
     from_account = models.ForeignKey(
         'accounts.Account',
         on_delete=models.CASCADE,
-        related_name='outgoing_transactions'
+        related_name='outgoing_transactions',
+        default=1, 
+
     )
     # Cuenta destino
     to_account = models.ForeignKey(
         'accounts.Account',
         on_delete=models.CASCADE,
-        related_name='incoming_transactions'
+        related_name='incoming_transactions',
+        default=1, 
+
     )
     monto = models.DecimalField(max_digits=12, decimal_places=2)
     moneda = models.CharField(
@@ -58,4 +63,4 @@ class Transaccion (models.Model):
     )
 
     def __str__(self):
-        return f"Transacción {self.id} - {self.user} - {self.monto} {self.moneda}"
+        return f"Transacción {self.id} - {self.user} - {self.monto} : {self.moneda}"

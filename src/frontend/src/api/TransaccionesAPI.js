@@ -1,60 +1,51 @@
-import axios from 'axios';
-
-const API_URL = 'http://localhost:8000/api/transactions/';
-
-// Función para obtener el token desde el contexto o localStorage
-const getAuthToken = () => {
-  return localStorage.getItem('token');
-};
+import api from './axiosInstance';
 
 // Realizar una transferencia
 export const realizarTransferencia = async (transferData) => {
-  const token = getAuthToken();
-  const config = {
-      headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-      },
-  };
-
   try {
-      const response = await axios.post(`${API_URL}realizar_transferencia/`, transferData, config);
-      return response.data;
+    const response = await api.post('/transacciones/realizar_transferencia/', transferData);
+    return response.data;
   } catch (error) {
-      throw error.response ? error.response.data : error;
+    throw error.response ? error.response.data : error;
   }
 };
 
 // Obtener todas las transacciones del usuario
 export const getTransactions = async () => {
-  const token = getAuthToken();
-  const config = {
-      headers: {
-          'Authorization': `Bearer ${token}`,
-      },
-  };
-
   try {
-      const response = await axios.get(`${API_URL}`, config);
-      return response.data;
+    const response = await api.get('/transacciones/');
+    return response.data;
   } catch (error) {
-      throw error.response ? error.response.data : error;
+    throw error.response ? error.response.data : error;
   }
 };
 
 // Obtener las cuentas del usuario
 export const getUserAccounts = async () => {
-  const token = getAuthToken();
-  const config = {
-      headers: {
-          'Authorization': `Bearer ${token}`,
-      },
-  };
-
   try {
-      const response = await axios.get('http://localhost:8000/api/accounts/', config); // Aquí puedes cambiar la URL según tu backend
-      return response.data;
+    const response = await api.get('/accounts/user-accounts/');
+    return response.data;
   } catch (error) {
-      throw error.response ? error.response.data : error;
+    throw error.response ? error.response.data : error;
+  }
+};
+
+// Obtener todas las cuentas (solo si tu API lo permite)
+export const getAllAccounts = async () => {
+  try {
+    const response = await api.get('/accounts/all-accounts/');
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
+  }
+};
+
+// Verificar MFA
+export const verifyMFAAPI = async (data) => {
+  try {
+    const response = await api.post('/transacciones/verify-mfa/', data);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error;
   }
 };

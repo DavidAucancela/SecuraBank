@@ -45,4 +45,20 @@ api.interceptors.response.use(
     }
 );
 
+export const login = async (username, password) => {
+    try {
+        const response = await axios.post(`${API_URL}token/`, {
+            username,
+            password
+        });
+        const { access, refresh } = response.data;
+        // Almacenar el token en localStorage
+        localStorage.setItem('access_token', access);
+        localStorage.setItem('refresh_token', refresh);
+        return access;
+    } catch (error) {
+        throw error.response ? error.response.data : error;
+    }
+};
+
 export default api;

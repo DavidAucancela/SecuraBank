@@ -8,20 +8,20 @@ export const AuthContext = createContext();
 // Proveedor del contexto
 export const AuthProvider = ({ children }) => {
 
-  // Estado para almacenar los tokens de autenticación
+  // Inicializa los tokens leyendo de localStorage
   const [authTokens, setAuthTokens] = useState(() => {
     const access = localStorage.getItem('access_token');
     const refresh = localStorage.getItem('refresh_token');
     return access && refresh ? { access, refresh } : null;
   });
   
-  // Estado para almacenar la información del usuario
+  // Guarda la información decodificada del usuario
   const [user, setUser] = useState(() => {
     if (authTokens) {
       try {
         return jwtDecode(authTokens.access);
       } catch (error) {
-        console.error('Error decodificando JWT:', error);
+        console.error('Error decodificando el token:', error);
         return null;
       }
     }
@@ -177,7 +177,9 @@ export const AuthProvider = ({ children }) => {
   // Dependencias faltantes agregadas
 });  // Agregar las funciones al array de dependencias
 
-  // Efecto para comprobar si se requiere MFA
+
+
+
   return (
     <AuthContext.Provider
       value={{

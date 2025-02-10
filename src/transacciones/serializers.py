@@ -1,10 +1,13 @@
 from rest_framework import serializers
-from .models import Transaccion, CURRENCY_CHOICES
+from .models import Transaction, CURRENCY_CHOICES
+from accounts.serializers import AccountSerializer  
 
-class TransaccionSerializer(serializers.ModelSerializer):
+class TransactionSerializer(serializers.ModelSerializer):
+    from_account = AccountSerializer(read_only=True)
+    to_account = AccountSerializer(read_only=True)
     moneda = serializers.ChoiceField(choices=CURRENCY_CHOICES, default='USD')
     class Meta:
-        model = Transaccion
+        model = Transaction
         fields = [
             'id',
             'user',

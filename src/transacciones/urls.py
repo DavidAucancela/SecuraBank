@@ -1,13 +1,14 @@
 from django.urls import path
-from . import views
 from rest_framework.routers import DefaultRouter
+from .views import RealizarTransferenciaView, ListarTransaccionesView, verify_transfer_mfa
 
 
 router = DefaultRouter()
 
 urlpatterns = [
-    path('realizar_transferencia/', views.RealizarTransferenciaView, name='realizar_transferencia'),
-    path('create/', views.CreateTransaccionView.as_view(), name='create_transaccion'),
+    path('realizar_transferencia/', RealizarTransferenciaView.as_view(), name='realizar_transferencia'),
+    path('/', ListarTransaccionesView.as_view(), name='list_transferencia'),
+    path('verify-mfa/', verify_transfer_mfa, name='verify_transferencia'),
 ]
 
 urlpatterns = router.urls
