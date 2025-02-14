@@ -1,6 +1,7 @@
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
+import dj_database_url
 
 # Ruta base
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -74,15 +75,20 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 #Database
 #postgresql -SEGURA
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),   
-    }
-}
+     'default': {
+         'ENGINE': 'django.db.backends.postgresql',
+         'NAME': config('DB_NAME'),
+         'USER': config('DB_USER'),
+         'PASSWORD': config('DB_PASSWORD'),
+         'HOST': config('DB_HOST'),
+         'PORT': config('DB_PORT'),   
+     }
+ }
+
+#postgresql - nube
+# DATABASES = {
+# 'default': dj_database_url.config(default="postgresql://postgres:QeVMFNWtXggEQvjDJhtVhZvJiQWaOwof@autorack.proxy.rlwy.net:41783/railway", conn_max_age=1800),
+#}
 
 
 # controles contraseñas

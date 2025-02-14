@@ -1,51 +1,46 @@
-import api from './axiosInstance';
+import axios from 'axios';
 
-// Realizar una transferencia
-export const realizarTransferencia = async (transferData) => {
-  try {
-    const response = await api.post('/transacciones/realizar_transferencia/', transferData);
-    return response.data;
-  } catch (error) {
-    throw error.response ? error.response.data : error;
-  }
-};
+const BASE_URL = 'http://localhost:8000/api';
 
-// Obtener todas las transacciones del usuario
-export const getTransactions = async () => {
-  try {
-    const response = await api.get('/transacciones/');
-    return response.data;
-  } catch (error) {
-    throw error.response ? error.response.data : error;
-  }
-};
+// Interceptor para autenticación
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// Obtener las cuentas del usuario
+// Operaciones con cuentas
 export const getUserAccounts = async () => {
   try {
-    const response = await api.get('/accounts/user-accounts/');
+    const response = await axios.get(`${BASE_URL}/accounts/`);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;
   }
 };
 
-// Obtener todas las cuentas (solo si tu API lo permite)
-export const getAllAccounts = async () => {
+// Operaciones con transacciones
+export const realizarTransferencia = async (transferData) => {
   try {
-    const response = await api.get('/accounts/all-accounts/');
+    const response = await axios.post(`${BASE_URL}/transacciones/`, transferData);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;
   }
 };
 
-// Verificar MFA
-export const verifyMFAAPI = async (data) => {
+export const getTransactions = async () => {
   try {
-    const response = await api.post('/transacciones/verify-mfa/', data);
+    const response = await axios.get(`${BASE_URL}/transacciones/`);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;
   }
 };
+
+// Eliminado: verifyMFAAPI (si no está implementado en el backend)

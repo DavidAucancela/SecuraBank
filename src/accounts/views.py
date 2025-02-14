@@ -1,23 +1,40 @@
+# Django REST Framework (DRF) - Vistas, Permisos y Respuestas
 from rest_framework import viewsets, permissions, generics
 from rest_framework.response import Response
 from rest_framework import status
-from django.db import transaction as db_transaction
-from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
+# Base de Datos
+from django.db import transaction as db_transaction
+
+# Modelos y Serialización
 from .models import Account
 from .serializers import AccountSerializer
 
-@api_view(['GET'])
-def get_user_accounts(request):
-    """
-    Retorna todas las cuentas pertenecientes al usuario autenticado.
-    """
-    user = request.user  
-    accounts = Account.objects.filter(user=user)  
-    serializer = AccountSerializer(accounts, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+# Vistas para las cuentas 
+class AccountViewSet(viewsets.ModelViewSet):
+    queryset = Account.objects.all()
+    serializer_class = AccountSerializer
+    permission_classes = [permissions.IsAuthenticated]  # Solo usuarios autenticados
+
+    def get_queryset(self):
+        # Cada usuario solo ve sus cuentas
+        return Account.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Asignar automáticamente el usuario a la cuenta
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        # Asignar automáticamente el usuario y el número de cuenta
+        serializer.save(user=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        # Eliminar una cuenta específica
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class UserAccountsView(generics.ListAPIView):
     """
@@ -42,45 +59,6 @@ class AllAccountsView(generics.ListAPIView):
         return Account.objects.all()
         # Para excluir las cuentas del usuario actual:
         # return Account.objects.exclude(user=self.request.user)
-
-class AccountViewSet(viewsets.ModelViewSet):
-    """
-    CRUD de cuentas
-    """
-    queryset = Account.objects.all()
-    serializer_class = AccountSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        """
-        Cada usuario ve solo sus cuentas
-        """
-        return Account.objects.filter(user=self.request.user)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Asignar automáticamente el 'user' a la cuenta.
-        """
-        data = request.data.copy()
-        data['user'] = request.user.id  # Forzar la cuenta al usuario logueado
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-
-        # Bloque transaccional
-        with db_transaction.atomic():
-            self.perform_create(serializer)
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-   
-    def perform_create(self, serializer):
-        import uuid
-        # Generar un número de cuenta único
-        account_number = str(uuid.uuid4()).replace('-', '')[:12].upper()
-        serializer.save(
-            user=self.request.user, 
-            account_number=account_number
-        )
 
 class AccountListView(APIView):
     permission_classes = [IsAuthenticated]

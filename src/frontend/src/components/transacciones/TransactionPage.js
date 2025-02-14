@@ -1,163 +1,118 @@
-// src/components/TransactionsPage.js
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
+import { getUserAccounts, realizarTransferencia, getTransactions } from '../../api/TransaccionesAPI';
 import Swal from 'sweetalert2';
-import {
-  getUserAccounts,
-  realizarTransferencia,
-  getTransactions,
-  verifyMFAAPI,
-} from '../../api/TransaccionesAPI';
-import { AuthContext } from '../../context/AuthContext';
 
 const TransactionPage = () => {
-  // Extrae authTokens en lugar de token
-  const { authTokens } = useContext(AuthContext);
-  // console.log('authTokens:', authTokens);
-
-  // Estados para cuentas y formulario
   const [userAccounts, setUserAccounts] = useState([]);
+  const [transacciones, setTransacciones] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
+  // Datos del formulario
   const [fromAccount, setFromAccount] = useState('');
   const [toAccount, setToAccount] = useState('');
   const [monto, setMonto] = useState('');
   const [moneda, setMoneda] = useState('USD');
-  const [mfaCode, setMfaCode] = useState('');
-  const [showMfa, setShowMfa] = useState(false);
+
+  // Estados de carga
   const [loading, setLoading] = useState(false);
-
-  // Estados para transacciones
-  const [transacciones, setTransacciones] = useState([]);
   const [transaccionesLoading, setTransaccionesLoading] = useState(false);
-
-  // Estado para indicar si MFA fue verificado
-  const [mfaVerified, setMfaVerified] = useState(false);
-
+  
   // Obtener las cuentas del usuario
   useEffect(() => {
     const fetchUserAccounts = async () => {
-      setLoading(true);
       try {
         const accounts = await getUserAccounts();
         setUserAccounts(accounts);
-        //console.log('Cuentas obtenidas:', accounts);
-      } catch (err) {
-        console.error('Error al obtener las cuentas', err);
+      } catch (error) {
         Swal.fire('Error', 'No se pudieron cargar las cuentas', 'error');
-      } finally {
-        setLoading(false);
       }
     };
 
-    if (authTokens && authTokens.access) fetchUserAccounts();
-  }, [authTokens]);
+    fetchUserAccounts();
+  }, []);
 
-  // Obtener las transacciones del usuario
+  // Obtener transacciones
   useEffect(() => {
-    const fetchTransacciones = async () => {
+    const fetchTransactions = async () => {
       setTransaccionesLoading(true);
       try {
-        const trans = await getTransactions();
-        console.log('Transacciones obtenidas:', trans); // Mira aquí qué te llega
-        setTransacciones(trans);
-      } catch (err) {
-        console.error('Error al obtener transacciones', err);
-        Swal.fire('Error', 'No se pudieron cargar las transacciones', 'error');
+        const data = await getTransactions();
+        // Asegúrate de que data sea un array
+        if (Array.isArray(data)) {
+          setTransacciones(data);
+        } else {
+          console.error('Respuesta de transacciones no es un array:', data);
+          setTransacciones([]);
+        }
+      } catch (error) {
+        Swal.fire('Error', 'No se pudieron cargar las transacciones.', 'error');
+        setTransacciones([]);
       } finally {
         setTransaccionesLoading(false);
       }
     };
+    fetchTransactions();
+  }, []);
 
-    if (authTokens && authTokens.access) fetchTransacciones();
-  }, [authTokens]);
-
-  // Mostrar/ocultar campo MFA según el monto
+  // Cuando se cambia la cuenta de origen, obtener la info para mostrar
   useEffect(() => {
-    if (parseFloat(monto) > 500) {
-      setShowMfa(true);
+    if (fromAccount) {
+      const account = userAccounts.find(acc => acc.id === fromAccount);
+      setSelectedAccount(account);
     } else {
-      setShowMfa(false);
-      setMfaCode('');
-      setMfaVerified(false);
+      setSelectedAccount(null);
     }
-  }, [monto]);
-
-  // Función para verificar el código MFA
-  const handleVerifyMFA = async () => {
-    if (!mfaCode) {
-      Swal.fire('Error', 'Ingresa el código MFA para verificar.', 'error');
-      return;
-    }
-    try {
-      const response = await verifyMFAAPI({ mfa_code: mfaCode });
-      Swal.fire('Éxito', response.detail, 'success');
-      setMfaVerified(true);
-    } catch (error) {
-      console.error('Error al verificar MFA:', error);
-      Swal.fire('Error', error.response?.data?.detail || 'Código MFA inválido.', 'error');
-      setMfaVerified(false);
-    }
-  };
-
-  // Función para manejar el envío de la transferencia
+  }, [fromAccount, userAccounts]);
+  
+  // Manejo de envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (fromAccount === toAccount) {
-      Swal.fire('Error', 'La cuenta de origen y destino no pueden ser iguales.', 'error');
+    if (!fromAccount || !toAccount || !monto) {
+      Swal.fire('Error', 'Todos los campos son obligatorios.', 'error');
       return;
     }
-
-    if (!fromAccount || !toAccount || !monto || !moneda) {
-      Swal.fire('Error', 'Por favor, completa todos los campos requeridos.', 'error');
-      return;
-    }
-
-    // Si el monto supera 500, se requiere que MFA ya haya sido verificado
-    if (parseFloat(monto) > 500 && !mfaVerified) {
-      Swal.fire('Error', 'Verifica el código MFA antes de enviar la transferencia.', 'error');
+    if (Number(monto) <= 0) {
+      Swal.fire('Error', 'El monto debe ser mayor a 0.', 'error');
       return;
     }
 
     const transferData = {
       from_account: fromAccount,
       to_account: toAccount,
-      monto: monto,
-      moneda: moneda,
-      ubicacion: 'Online',
-      ...(parseFloat(monto) > 500 && { mfa_code: mfaCode }),
+      monto,
+      moneda,
     };
 
     setLoading(true);
     try {
-      const response = await realizarTransferencia(transferData);
-      Swal.fire('Éxito', `Transferencia realizada exitosamente. ID: ${response.id}`, 'success');
+      const nuevaTransaccion = await realizarTransferencia(transferData);
+      Swal.fire('Éxito', 'Transferencia realizada con éxito.', 'success');
 
-      // Resetear el formulario y el estado de MFA
+      // Limpiar formulario
       setFromAccount('');
       setToAccount('');
       setMonto('');
       setMoneda('USD');
-      setMfaCode('');
-      setShowMfa(false);
-      setMfaVerified(false);
 
-      // Actualizar listas
-      const accounts = await getUserAccounts();
-      setUserAccounts(accounts);
-      //console.log('Cuentas actualizadas:', accounts);
-
-      const trans = await getTransactions();
-      setTransacciones(trans);
-      //console.log('Transacciones actualizadas:', trans);
-    } catch (err) {
-      console.error('Error al realizar la transferencia:', err);
-      Swal.fire('Error', err.response?.data?.detail || 'Ocurrió un error al realizar la transferencia.', 'error');
+      // Agregar la transacción al inicio del array
+      setTransacciones(prev => [nuevaTransaccion, ...prev]);
+    } catch (error) {
+      Swal.fire('Error', 'No se pudo realizar la transferencia.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  // Encuentra el objeto de la cuenta seleccionada para origen
-  const selectedAccount = userAccounts.find(account => account.id === parseInt(fromAccount));
+  // Cuando se cambia la cuenta de origen, obtener la info para mostrar
+  useEffect(() => {
+    if (fromAccount) {
+      const account = userAccounts.find(acc => acc.id === fromAccount);
+      setSelectedAccount(account);
+    } else {
+      setSelectedAccount(null);
+    }
+  }, [fromAccount, userAccounts]);
 
   return (
     <div className="container my-4">
@@ -167,15 +122,15 @@ const TransactionPage = () => {
           <div className="card shadow-sm">
             <div className="card-body">
               <h5 className="card-title">Información de la Cuenta de Origen</h5>
-              <p className="card-text mb-1"><strong>Nombre:</strong> {selectedAccount.name}</p>
-              <p className="card-text mb-1"><strong>Número:</strong> {selectedAccount.account_number}</p>
-              <p className="card-text mb-1"><strong>Propietario:</strong> {selectedAccount.owner}</p>
-              <p className="card-text"><strong>Saldo:</strong> ${selectedAccount.saldo}</p>
+              <p><strong>Nombre:</strong> {selectedAccount.name}</p>
+              <p><strong>Número:</strong> {selectedAccount.account_number}</p>
+              <p><strong>Propietario:</strong> {selectedAccount.owner}</p>
+              <p><strong>Saldo:</strong> ${selectedAccount.saldo}</p>
             </div>
           </div>
         ) : (
           <div className="alert alert-info">
-            Selecciona una cuenta de origen para ver su información y saldo.
+            Selecciona una cuenta de origen para ver su información.
           </div>
         )}
       </div>
@@ -187,6 +142,7 @@ const TransactionPage = () => {
             <div className="card-body">
               <h2 className="text-center mb-4">Realizar Transferencia</h2>
               <form onSubmit={handleSubmit}>
+                {/* Cuenta de Origen */}
                 <div className="mb-3">
                   <label className="form-label">Cuenta de Origen</label>
                   <select
@@ -197,18 +153,15 @@ const TransactionPage = () => {
                     disabled={loading}
                   >
                     <option value="">Seleccione una cuenta</option>
-                    {userAccounts.length > 0 ? (
-                      userAccounts.map((account) => (
-                        <option key={account.id} value={account.id}>
-                          {account.account_number} - {account.name}
-                        </option>
-                      ))
-                    ) : (
-                      <option disabled>No hay cuentas disponibles</option>
-                    )}
+                    {userAccounts.map(account => (
+                      <option key={account.id} value={account.id}>
+                        {account.account_number} - {account.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
+                {/* Cuenta de Destino */}
                 <div className="mb-3">
                   <label className="form-label">Cuenta de Destino</label>
                   <select
@@ -219,18 +172,15 @@ const TransactionPage = () => {
                     disabled={loading}
                   >
                     <option value="">Seleccione una cuenta</option>
-                    {userAccounts.length > 0 ? (
-                      userAccounts.map((account) => (
-                        <option key={account.id} value={account.id}>
-                          {account.account_number} - {account.name}
-                        </option>
-                      ))
-                    ) : (
-                      <option disabled>No hay cuentas disponibles</option>
-                    )}
+                    {userAccounts.map(account => (
+                      <option key={account.id} value={account.id}>
+                        {account.account_number} - {account.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
+                {/* Monto */}
                 <div className="mb-3">
                   <label className="form-label">Monto</label>
                   <input
@@ -245,6 +195,7 @@ const TransactionPage = () => {
                   />
                 </div>
 
+                {/* Moneda */}
                 <div className="mb-3">
                   <label className="form-label">Moneda</label>
                   <select
@@ -266,32 +217,6 @@ const TransactionPage = () => {
                     <option value="SEK">SEK - Corona sueca</option>
                   </select>
                 </div>
-
-                {showMfa && (
-                  <>
-                    <div className="mb-3">
-                      <label className="form-label">Código MFA</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={mfaCode}
-                        onChange={(e) => setMfaCode(e.target.value)}
-                        required={showMfa}
-                        disabled={loading || mfaVerified}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <button
-                        type="button"
-                        className="btn btn-outline-danger"
-                        onClick={handleVerifyMFA}
-                        disabled={loading || mfaVerified}
-                      >
-                        {mfaVerified ? 'MFA Verificado' : 'Verificar MFA'}
-                      </button>
-                    </div>
-                  </>
-                )}
 
                 <button type="submit" className="btn btn-primary w-100" disabled={loading}>
                   {loading ? (
@@ -315,7 +240,7 @@ const TransactionPage = () => {
           <h3 className="mb-3">Transferencias Recientes</h3>
           {transaccionesLoading ? (
             <div className="text-center">
-              <div className="spinner-border" role="status" />
+              <div className="spinner-border" role="status"></div>
               <p>Cargando...</p>
             </div>
           ) : transacciones.length === 0 ? (
@@ -337,8 +262,8 @@ const TransactionPage = () => {
                 {transacciones.map((trans) => (
                   <tr key={trans.id}>
                     <td>{trans.id}</td>
-                    <td>{trans.from_account.account_number}</td>
-                    <td>{trans.to_account.account_number}</td>
+                    <td>{trans.from_account?.account_number}</td>
+                    <td>{trans.to_account?.account_number}</td>
                     <td>{trans.monto}</td>
                     <td>{trans.moneda}</td>
                     <td>{new Date(trans.fecha).toLocaleString()}</td>

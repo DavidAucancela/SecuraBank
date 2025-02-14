@@ -10,6 +10,7 @@ import Register from './components/Auth/Register'; // Página de registro
 import CuentasPage from './components/cuentas/CuentasPage'; // Página de cuentas
 import Layout from './components/Layout';
 import TransactionPage from './components/transacciones/TransactionPage';
+import UserSettings from './components/configuracion/UserSettings';
 
 function App() {
   return (
@@ -22,12 +23,13 @@ function App() {
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/reset-password" element={<PasswordResetConfirm />} />
           <Route path="/mfa" element={<MFA />} />
+          <Route path="/settings" element={<UserSettings />} />
 
 
           {/* Rutas privadas */}
           <Route path="/cuentas" element={<PrivateRoute><Layout><CuentasPage /></Layout></PrivateRoute>} />
           <Route path="/transacciones" element={<PrivateRoute><Layout><TransactionPage/></Layout></PrivateRoute>} />
-          <Route path="/configuracion" element={<PrivateRoute><Layout><PasswordResetConfirm /></Layout></PrivateRoute> }/>
+          <Route path="/configuracion" element={<PrivateRoute><Layout><UserSettings /></Layout></PrivateRoute> }/>
 
           {/* Redirección de la raíz al login */}
           <Route path="/" element={<Navigate to="/login" />} />

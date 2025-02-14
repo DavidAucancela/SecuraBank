@@ -1,6 +1,4 @@
 import axios from 'axios';
-
-// URL base para la API de Cuentas (ajusta el puerto/protocolo si es necesario)
 const BASE_URL = 'http://localhost:8000/api/accounts/';
 
 const cuentasApi = axios.create({
@@ -60,7 +58,7 @@ export const fetchCuentas = async () => {
 
 /** Crea una nueva cuenta */
 export const crearCuenta = async (accountNumber, token) => {
-  const response = await cuentasApi.post('/', { account_number: accountNumber }, {
+  const response = await cuentasApi.post('/accounts/', { account_number: accountNumber }, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -68,18 +66,14 @@ export const crearCuenta = async (accountNumber, token) => {
   return response.data;
 };
 
-
 /** Elimina una cuenta por ID */
 export const eliminarCuenta = async (id, token) => {
-  const response = await cuentasApi.delete(`/${id}/`, {
+  const response = await cuentasApi.delete(`/accounts/${id}/`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-    return response.data;
+  return response.data;
 };
-
-// (Opcional) Podrías exportar otras funciones para editar, depositar, retirar, etc.
-// export const editarCuenta = ...
 
 export default cuentasApi;

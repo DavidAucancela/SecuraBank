@@ -8,6 +8,7 @@ const CuentasPage = () => {
   const [loading, setLoading] = useState(false);
   const [cuentas, setCuentas] = useState([]);
 
+  // Cargar cuentas cuando el componente se monta
   useEffect(() => {
     cargarCuentas();
   }, []);
@@ -25,6 +26,7 @@ const CuentasPage = () => {
     }
   };
 
+  // Validación de los campos del formulario
   const validateFields = () => {
     let valid = true;
     setAccountNumberError('');
@@ -35,6 +37,7 @@ const CuentasPage = () => {
     return valid;
   };
 
+  // Manejo de la creación de cuenta
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateFields()) return;
@@ -53,6 +56,7 @@ const CuentasPage = () => {
     }
   };
 
+  // Manejo de la eliminación de cuenta
   const handleEliminar = async (id) => {
     const confirmResult = await Swal.fire({
       title: '¿Eliminar cuenta?',
@@ -68,7 +72,7 @@ const CuentasPage = () => {
     try {
       await eliminarCuenta(id);
       Swal.fire('Eliminada', 'La cuenta ha sido eliminada', 'success');
-      cargarCuentas();
+      setCuentas(cuentas.filter(cuenta => cuenta.id !== id));  // Optimización: eliminar localmente
     } catch (error) {
       console.error('Error al eliminar cuenta:', error);
       Swal.fire('Error', 'No se pudo eliminar la cuenta', 'error');
@@ -93,9 +97,10 @@ const CuentasPage = () => {
                     className={`form-control ${accountNumberError ? 'is-invalid' : ''}`}
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
+                    aria-describedby="accountNumberError"
                   />
                   {accountNumberError && (
-                    <div className="invalid-feedback">{accountNumberError}</div>
+                    <div id="accountNumberError" className="invalid-feedback">{accountNumberError}</div>
                   )}
                 </div>
                 <button type="submit" className="btn btn-primary w-100" disabled={loading}>

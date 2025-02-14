@@ -6,12 +6,11 @@ from . import views
 from .views import (
     RegisterView,
     CustomTokenObtainPairView,
-
+    UserDetailView,
     generate_mfa_qr,
     confirm_mfa,
     mfa_status,
     resend_mfa_code,
-    get_user,              # <-- Importamos get_user
     LogoutView,
     PasswordResetRequestView,
     PasswordResetConfirmView
@@ -39,4 +38,7 @@ urlpatterns = [
     # Recuperación de contraseña
     path('password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('password-reset-confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+
+    # Obtener información del usuario
+    path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
 ]

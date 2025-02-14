@@ -168,14 +168,12 @@ def get_user(request):
     return Response(serializer.data)
 
 # ========== REGISTRO ==========
-
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
 # ========== LOGIN (JWT) ==========
-
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     Vista personalizada para forzar MFA antes de entregar tokens.
@@ -236,7 +234,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             return Response(tokens, status=status.HTTP_200_OK)
 
 # ========== LOGOUT ==========
-
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -253,7 +250,6 @@ class LogoutView(APIView):
             return Response({"detail": "Error al cerrar sesión."}, status=status.HTTP_400_BAD_REQUEST)
 
 # ========== RECUPERACIÓN DE CONTRASEÑA ==========
-
 class PasswordResetRequestView(generics.GenericAPIView):
     """
     Solicitud de reseteo: genera un token y un uid y los manda por correo.
@@ -298,7 +294,6 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         return Response({"detail": "Contraseña restablecida correctamente."}, status=status.HTTP_200_OK)
 
 # ========== USUARIOS ==========
-
 class UserRetrieveUpdateView(generics.RetrieveUpdateAPIView):
     """
     Vista para permitir obtener/actualizar datos del usuario autenticado.
@@ -308,3 +303,9 @@ class UserRetrieveUpdateView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+# ========== MODIFICAR ======================
+class UserDetailView(generics.RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
