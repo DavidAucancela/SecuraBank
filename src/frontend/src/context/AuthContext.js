@@ -174,8 +174,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
     return () => clearTimeout(interval);
-  // Dependencias faltantes agregadas
-});  // Agregar las funciones al array de dependencias
+  }, [authTokens]);
 
 
 

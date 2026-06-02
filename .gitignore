@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+env/
+env_mac/
+venv/
+.venv/
+
+# Django
+*.log
+logs/
+db.sqlite3
+staticfiles/
+media/
+
+# Secrets
+.env
+*.env
+
+# Node / React
+node_modules/
+npm-debug.log*
+yarn-error.log
+/src/frontend/build/
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Compiled bytecode (extra patterns)
+src/**/__pycache__/
+src/**/*.pyc
