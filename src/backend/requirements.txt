@@ -6,3 +6,5 @@ django-otp
 qrcode
 python-decouple
 psycopg2-binary
+dj-database-url
+drf-spectacular

@@ -1,5 +1,5 @@
 from rest_framework.routers import DefaultRouter
-from .views import AccountViewSet, UserAccountsView, AllAccountsView, AccountListView, CrearCuentaView
+from .views import AccountViewSet, UserAccountsView, AllAccountsView, AccountListView, CrearCuentaView, AccountLookupView
 from django.urls import path, include
 
 router = DefaultRouter()
@@ -11,6 +11,7 @@ urlpatterns = [
     path('user-accounts/', UserAccountsView.as_view(), name='user_accounts'),
     path('all-accounts/', AllAccountsView.as_view(), name='all_accounts'),
     path('crear/', CrearCuentaView.as_view(), name='crear_cuenta'),
+    path('lookup/', AccountLookupView.as_view(), name='account_lookup'),
     
     # Ruta de listado general de cuentas (utiliza la ruta del router)
     path('', AccountListView.as_view(), name='listar_cuentas'),

@@ -1,16 +1,17 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext'; // Contexto de autenticación
-import MFA from './components/Auth/MFA'; // Autenticación de doble factor
-import PasswordReset from './components/Auth/PasswordReset'; // Restablecimiento de contraseña
-import PasswordResetConfirm from './components/Auth/PasswordResetConfirm'; // Confirmación de restablecimiento de contraseña
-import PrivateRoute from './components/PrivateRoute'; // Ruta protegida
-import Login from './components/Auth/Login'; // Página de inicio de sesión
-import Register from './components/Auth/Register'; // Página de registro
-import CuentasPage from './components/cuentas/CuentasPage'; // Página de cuentas
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import MFA from './components/Auth/MFA';
+import PasswordReset from './components/Auth/PasswordReset';
+import PasswordResetConfirm from './components/Auth/PasswordResetConfirm';
+import PrivateRoute from './components/PrivateRoute';
+import Login from './components/Auth/Login';
+import Register from './components/Auth/Register';
+import CuentasPage from './components/cuentas/CuentasPage';
 import Layout from './components/Layout';
 import TransactionPage from './components/transacciones/TransactionPage';
 import UserSettings from './components/configuracion/UserSettings';
+import DashboardPage from './components/dashboard/DashboardPage';
 
 function App() {
   return (
@@ -23,16 +24,15 @@ function App() {
           <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/reset-password" element={<PasswordResetConfirm />} />
           <Route path="/mfa" element={<MFA />} />
-          <Route path="/settings" element={<UserSettings />} />
-
 
           {/* Rutas privadas */}
+          <Route path="/dashboard" element={<PrivateRoute><Layout><DashboardPage /></Layout></PrivateRoute>} />
           <Route path="/cuentas" element={<PrivateRoute><Layout><CuentasPage /></Layout></PrivateRoute>} />
-          <Route path="/transacciones" element={<PrivateRoute><Layout><TransactionPage/></Layout></PrivateRoute>} />
-          <Route path="/configuracion" element={<PrivateRoute><Layout><UserSettings /></Layout></PrivateRoute> }/>
+          <Route path="/transacciones" element={<PrivateRoute><Layout><TransactionPage /></Layout></PrivateRoute>} />
+          <Route path="/configuracion" element={<PrivateRoute><Layout><UserSettings /></Layout></PrivateRoute>} />
 
-          {/* Redirección de la raíz al login */}
-          <Route path="/" element={<Navigate to="/login" />} />
+          {/* Raíz redirige al dashboard si está autenticado, si no al login */}
+          <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </AuthProvider>
     </Router>
