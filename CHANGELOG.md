@@ -4,6 +4,61 @@ Registro de cambios por sprint. Convención: **[FIXED]** bug corregido · **[ADD
 
 ---
 
+## Sprint D — Transferencias externas y rediseño UI
+
+### Entorno y configuración
+
+**[ADDED] `.gitignore` creado**
+- Excluye `env/`, `env_mac/`, `node_modules/`, `logs/`, `*.pyc`, `__pycache__/`, `.env`, `.DS_Store`
+- Evita subir el venv, cachés de Python y archivos sensibles al repositorio
+
+**[FIXED] Puerto del frontend cambiado a 3001**
+- `frontend/package.json` — script `start` modificado a `PORT=3001 react-scripts start`
+- `src/.env` — `FRONTEND_URL` y `CORS_ALLOWED_ORIGINS` actualizados a `http://localhost:3001`
+- Motivo: el puerto 3000 estaba ocupado por otro servicio Docker (`open-webui`)
+
+**[ADDED] Soporte de entorno macOS**
+- `src/env_mac/` — virtual environment Python creado con `python3 -m venv`
+- PostgreSQL levantado vía Docker: `docker run -d --name securabank-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=admin -e POSTGRES_DB=dbSGT -p 5434:5432 postgres:15`
+- 48 tests ejecutados y verificados: `OK` sobre la base de datos Docker
+
+### Backend
+
+**[ADDED] Endpoint `GET /api/accounts/lookup/`**
+- `accounts/views.py` — `AccountLookupView`: busca una cuenta por número (`?number=ACC-XXX`)
+- Devuelve solo `{id, account_number, owner}` — mínimo necesario para confirmar un destinatario sin exponer datos sensibles
+- Requiere autenticación JWT; devuelve 404 si el número no existe
+- `accounts/urls.py` — ruta `lookup/` registrada antes del router para evitar colisiones
+
+### Frontend
+
+**[FIXED] Transferencias a cuentas de otros usuarios**
+- `TransactionPage.js` — el selector de destino solo mostraba cuentas propias (bug conocido desde Sprint C)
+- Reemplazado por toggle **"Mis cuentas" / "Otro usuario"**:
+  - Modo "Mis cuentas": dropdown filtrado (excluye la cuenta de origen seleccionada)
+  - Modo "Otro usuario": input de número de cuenta + botón "Buscar" que llama a `/api/accounts/lookup/`; muestra nombre del titular antes de confirmar
+- `CuentasAPI.js` — añadida función `lookupCuenta(number)`
+
+**[REFACTOR] `TransactionPage.js` — rediseño completo**
+- Layout en dos columnas: formulario (izquierda) | historial (derecha)
+- Tarjeta de cuenta de origen con saldo disponible destacado
+- Campo de monto con prefijo `$` y selector de moneda compacto en la misma fila
+- Historial con `list-group` en lugar de tabla:
+  - Badge **↑ Enviada** (rojo) / **↓ Recibida** (verde) según si la cuenta origen pertenece al usuario
+  - Montos formateados con signo `−` / `+` y separadores de miles
+  - Fecha en formato `dd/mm/yyyy hh:mm`
+
+**[REFACTOR] `CuentasPage.js` — tabla reemplazada por cards**
+- Grid responsive de tarjetas Bootstrap (col-xl-3 / col-md-4 / col-sm-6)
+- Cada tarjeta muestra: nombre, número de cuenta con botón copiar (⎘ / ✓), saldo en grande, badge de estado
+- Formulario "Nueva Cuenta" compactado en una sola línea (input + botón)
+
+**[FIXED] `UserSettings.js` — feedback silencioso al guardar**
+- `handleUpdate` ahora muestra `Swal.fire('Guardado', ...)` en éxito y `Swal.fire('Error', ...)` en fallo
+- Añadido import de `sweetalert2`
+
+---
+
 ## Sprint C — Funcionalidades nuevas
 
 ### Backend

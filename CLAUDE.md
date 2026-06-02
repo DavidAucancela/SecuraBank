@@ -14,6 +14,7 @@ El código fuente está en `src/` dentro del repositorio raíz.
 
 ```
 SecuraBank/
+├── .gitignore
 ├── CLAUDE.md          ← este archivo
 ├── README.md          ← documentación completa del proyecto
 ├── CHANGELOG.md       ← historial de cambios por sprint
@@ -30,38 +31,62 @@ SecuraBank/
 
 ## Cómo arrancar el proyecto
 
+### Base de datos (Docker)
+
 ```bash
-# Backend (desde src/)
-python manage.py runserver        # http://localhost:8000
-
-# Frontend (desde src/frontend/)
-npm install && npm start           # http://localhost:3000
-
-# Tests
-python manage.py test
+docker start securabank-db
+# Si no existe aún:
+docker run -d --name securabank-db \
+  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=admin \
+  -e POSTGRES_DB=dbSGT -p 5434:5432 postgres:15
 ```
 
-El virtual environment está en `src/env/` pero es un venv de Windows (`.exe`). En macOS hay que crear uno nuevo:
+### Backend (desde la raíz del repo)
+
 ```bash
-python3 -m venv src/env_mac && source src/env_mac/bin/activate
+source src/env_mac/bin/activate
+cd src && python3 manage.py runserver   # http://localhost:8000
+```
+
+### Frontend (desde src/frontend/)
+
+```bash
+cd src/frontend && npm start            # http://localhost:3001
+```
+
+> El frontend corre en **3001**, no en 3000. Puerto 3000 está ocupado por otro contenedor Docker.
+
+### Tests
+
+```bash
+source src/env_mac/bin/activate
+cd src && python3 manage.py test        # 48 tests — OK
+```
+
+### Venv macOS
+
+El venv de Windows (`src/env/`) no funciona en Mac. Usar `src/env_mac/`:
+```bash
+python3 -m venv src/env_mac
+source src/env_mac/bin/activate
 pip install -r src/backend/requirements.txt
 ```
 
 ## Variables de entorno importantes (src/.env)
 
-- `SECRET_KEY` — clave Django (generada con `secrets.token_urlsafe(50)`)
+- `SECRET_KEY` — clave Django
 - `DEBUG` — `True` en dev, `False` en producción
 - `SENDGRID_API_KEY` — para envío de emails
-- `FRONTEND_URL` — base URL del frontend (para links en emails de reset)
-- `CORS_ALLOWED_ORIGINS` — orígenes permitidos (separados por coma)
-- `DB_*` — configuración PostgreSQL
+- `FRONTEND_URL=http://localhost:3001` — URL base del frontend
+- `CORS_ALLOWED_ORIGINS=http://localhost:3001` — orígenes CORS permitidos
+- `DB_*` — configuración PostgreSQL (host: localhost, port: 5434)
 
 ## URLs clave
 
-- API root: `http://localhost:8000/api/`
+- Backend API: `http://localhost:8000/api/`
 - Swagger UI: `http://localhost:8000/api/docs/`
 - Admin Django: `http://localhost:8000/admin/`
-- Frontend: `http://localhost:3000/`
+- Frontend: `http://localhost:3001/`
 
 ## Convenciones del proyecto
 
@@ -77,33 +102,38 @@ pip install -r src/backend/requirements.txt
 - Contexto global de auth: `src/frontend/src/context/AuthContext.js`
 - APIs separadas por dominio: `UsuariosAPI.js`, `CuentasAPI.js`, `TransaccionesAPI.js`, `DashboardAPI.js`
 - Alertas: SweetAlert2
-- Estilos: Bootstrap 5 únicamente (sin CSS custom salvo inline)
+- Estilos: Bootstrap 5 únicamente (sin CSS custom salvo inline styles puntuales)
 - Rutas protegidas con `PrivateRoute`
+- Color corporativo: `#006666` (teal oscuro)
 
-## Estado actual del proyecto (después de Sprint C)
+## Estado actual del proyecto (después de Sprint D)
 
 ### Funcionalidades completas
 - Registro/Login/Logout con JWT (access 5min, refresh 1día, rotation + blacklist)
 - MFA TOTP (Google Authenticator, Authy) con bloqueo tras 3 intentos
 - Recuperación de contraseña por email (SendGrid)
-- CRUD de cuentas bancarias (account_number auto-generado)
-- Transferencias con validación de saldo + MFA para montos > $500
+- CRUD de cuentas bancarias (account_number auto-generado, vista en cards)
+- Transferencias a cuentas propias o de otros usuarios por número de cuenta
+- MFA requerido para transferencias > $500
+- Historial de transferencias con dirección (enviada/recibida) y montos formateados
 - Dashboard con gráficas (recharts) y resumen financiero
 - Email de confirmación tras cada transferencia
 - Auditoría completa en `logs/audit.log`
 - Documentación API en `/api/docs/` (Swagger) y `/api/redoc/` (ReDoc)
-- 41 tests unitarios e integración
+- 48 tests unitarios e integración (todos en verde)
+- Feedback visual en UserSettings al guardar/fallar
 
 ### Bugs conocidos (pendientes)
-- `AllAccountsView` expone todas las cuentas del sistema (riesgo de enumeración); debería restringirse o paginarse
-- `TransactionSerializer` incluye `user` como campo expuesto (ID del usuario); considerar excluirlo
-- El frontend de transacciones solo muestra cuentas del propio usuario como destino; falta opción de transferir a cuentas de otros usuarios por número de cuenta
+- `AllAccountsView` (`GET /api/accounts/all-accounts/`) expone todas las cuentas del sistema — debería eliminarse o reemplazarse por el endpoint `lookup/`
+- `TransactionSerializer` incluye `user` (ID del usuario) como campo expuesto — considerar excluirlo
+- No hay paginación en el historial de transacciones — podría ser lento con muchas entradas
 
 ### Próximos pasos posibles
-- Paginación en listados de transacciones y cuentas
-- Búsqueda y filtros en historial de transacciones
+- Eliminar o restringir `AllAccountsView` (reemplazar con `lookup/`)
+- Paginación en historial de transacciones
+- Búsqueda y filtros en historial (por fecha, monto, cuenta)
 - Exportación de estado de cuenta en PDF
-- 2FA backup codes (códigos de recuperación)
+- 2FA backup codes (códigos de recuperación MFA)
 - Deploy en Railway/Render con PostgreSQL en la nube
 
 ## Dependencias importantes
@@ -115,6 +145,8 @@ django-otp         # TOTP MFA
 djangorestframework-simplejwt  # JWT
 django-cors-headers
 python-decouple    # .env management
+psycopg2-binary    # PostgreSQL driver
+dj-database-url    # Para deploy en nube (Railway)
 ```
 
 ### Frontend
@@ -125,6 +157,7 @@ jwt-decode         # Decodificar tokens en el cliente
 qrcode.react       # Generar QR para MFA setup
 zxcvbn             # Validación de fortaleza de contraseña
 axios              # HTTP client con interceptores
+react-hook-form    # Formularios
 ```
 
 ## Notas OWASP
@@ -132,6 +165,7 @@ axios              # HTTP client con interceptores
 El proyecto fue construido iterativamente priorizando seguridad:
 - **Sprint A:** configuración segura, headers HTTP, CORS, credenciales en .env
 - **Sprint B:** tests, logging, bugs de lógica de negocio, control de acceso
-- **Sprint C:** documentación API, dashboard, notificaciones
+- **Sprint C:** documentación API, dashboard, notificaciones por email
+- **Sprint D:** transferencias a terceros con lookup seguro, rediseño UI, .gitignore
 
 Ver `CHANGELOG.md` para el detalle completo de cada cambio y su justificación de seguridad.
