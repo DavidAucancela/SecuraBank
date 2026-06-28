@@ -10,7 +10,6 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = [
             'id',
-            'user',
             'from_account',
             'to_account',
             'monto',

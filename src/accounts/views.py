@@ -54,14 +54,6 @@ class UserAccountsView(generics.ListAPIView):
         return Account.objects.filter(user=self.request.user)
 
 
-class AllAccountsView(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = AccountSerializer
-
-    def get_queryset(self):
-        return Account.objects.all()
-
-
 class AccountListView(APIView):
     permission_classes = [IsAuthenticated]
 

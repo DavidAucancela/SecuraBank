@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings as django_settings
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404
 from django.db import transaction as db_transaction
@@ -18,6 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
+from rest_framework.pagination import PageNumberPagination
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 
@@ -29,6 +30,12 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from users.utils import verify_mfa_code, get_client_ip
 
 audit_log = logging.getLogger('securabank.audit')
+
+
+class TransactionPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 50
 
 
 def _parse_monto(raw):
@@ -78,9 +85,13 @@ class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = TransactionPagination
 
     def get_queryset(self):
-        return Transaction.objects.filter(user=self.request.user).order_by('-fecha')
+        user = self.request.user
+        return Transaction.objects.filter(
+            Q(user=user) | Q(to_account__user=user)
+        ).distinct().order_by('-fecha')
 
     def perform_create(self, serializer):
         data = self.request.data

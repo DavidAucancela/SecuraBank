@@ -34,9 +34,11 @@ export const realizarTransferencia = async (transferData) => {
   }
 };
 
-export const getTransactions = async () => {
+export const getTransactions = async (page = 1, pageSize = 10) => {
   try {
-    const response = await axios.get(`${BASE_URL}/transacciones/`);
+    const response = await axios.get(`${BASE_URL}/transacciones/`, {
+      params: { page, page_size: pageSize },
+    });
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error;

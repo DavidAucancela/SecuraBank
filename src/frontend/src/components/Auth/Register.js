@@ -31,6 +31,7 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await api.post('register/', formData);
 
@@ -46,8 +47,13 @@ const Register = () => {
       });
 
     } catch (error) {
-      // Manejo de errores
-      setErrors(error.response.data);
+      if (error.response?.data) {
+        setErrors(error.response.data);
+      } else {
+        setErrors({ non_field_errors: ['Error de conexión. Inténtalo de nuevo.'] });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
