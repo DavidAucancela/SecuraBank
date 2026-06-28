@@ -8,6 +8,7 @@ const TransactionPage = () => {
   const { user: authUser } = useContext(AuthContext);
   const [userAccounts, setUserAccounts] = useState([]);
   const [transacciones, setTransacciones] = useState([]);
+  const [pagination, setPagination] = useState({ count: 0, next: null, previous: null, page: 1 });
 
   const [fromAccount, setFromAccount] = useState('');
   const [destinoMode, setDestinoMode] = useState('propia');
@@ -30,14 +31,15 @@ const TransactionPage = () => {
     getUserAccounts()
       .then(setUserAccounts)
       .catch(() => Swal.fire('Error', 'No se pudieron cargar las cuentas', 'error'));
-    fetchTransactions();
+    fetchTransactions(1);
   }, []);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (page) => {
     setTransaccionesLoading(true);
     try {
-      const data = await getTransactions();
-      setTransacciones(Array.isArray(data) ? data : []);
+      const data = await getTransactions(page);
+      setTransacciones(Array.isArray(data.results) ? data.results : []);
+      setPagination({ count: data.count, next: data.next, previous: data.previous, page });
     } catch {
       setTransacciones([]);
     } finally {
@@ -110,7 +112,7 @@ const TransactionPage = () => {
 
       const updated = await getUserAccounts();
       setUserAccounts(updated);
-      setTransacciones(prev => [nuevaTransaccion, ...prev]);
+      fetchTransactions(1);
     } catch (error) {
       const msg = error?.error || error?.detail || 'No se pudo realizar la transferencia.';
       Swal.fire('Error', msg, 'error');
@@ -328,7 +330,12 @@ const TransactionPage = () => {
         <div className="col-lg-7">
           <div className="card shadow-sm">
             <div className="card-body">
-              <h5 className="card-title mb-3">Historial de Transferencias</h5>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="card-title mb-0">Historial de Transferencias</h5>
+                {pagination.count > 0 && (
+                  <small className="text-muted">{pagination.count} en total</small>
+                )}
+              </div>
               {transaccionesLoading ? (
                 <div className="text-center py-5">
                   <div className="spinner-border text-secondary" role="status" />
@@ -336,40 +343,61 @@ const TransactionPage = () => {
               ) : transacciones.length === 0 ? (
                 <p className="text-muted text-center py-5 mb-0">No hay transferencias registradas.</p>
               ) : (
-                <div className="list-group list-group-flush">
-                  {transacciones.map(trans => {
-                    const isEnviada = getDir(trans) === 'enviada';
-                    const contraparte = isEnviada ? trans.to_account : trans.from_account;
-                    return (
-                      <div key={trans.id} className="list-group-item px-0 py-3">
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div>
-                            <span className={`badge me-2 ${isEnviada ? 'bg-danger' : 'bg-success'}`}>
-                              {isEnviada ? '↑ Enviada' : '↓ Recibida'}
-                            </span>
-                            <small className="text-muted">
-                              {isEnviada ? 'A: ' : 'De: '}
-                              <code>{contraparte?.account_number}</code>
-                            </small>
-                          </div>
-                          <div className="text-end">
-                            <div className={`fw-bold ${isEnviada ? 'text-danger' : 'text-success'}`}>
-                              {isEnviada ? '−' : '+'}$
-                              {parseFloat(trans.monto).toLocaleString('es-ES', { minimumFractionDigits: 2 })}{' '}
-                              {trans.moneda}
+                <>
+                  <div className="list-group list-group-flush">
+                    {transacciones.map(trans => {
+                      const isEnviada = getDir(trans) === 'enviada';
+                      const contraparte = isEnviada ? trans.to_account : trans.from_account;
+                      return (
+                        <div key={trans.id} className="list-group-item px-0 py-3">
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div>
+                              <span className={`badge me-2 ${isEnviada ? 'bg-danger' : 'bg-success'}`}>
+                                {isEnviada ? '↑ Enviada' : '↓ Recibida'}
+                              </span>
+                              <small className="text-muted">
+                                {isEnviada ? 'A: ' : 'De: '}
+                                <code>{contraparte?.account_number}</code>
+                              </small>
                             </div>
-                            <small className="text-muted">
-                              {new Date(trans.fecha).toLocaleString('es-ES', {
-                                day: '2-digit', month: '2-digit', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit',
-                              })}
-                            </small>
+                            <div className="text-end">
+                              <div className={`fw-bold ${isEnviada ? 'text-danger' : 'text-success'}`}>
+                                {isEnviada ? '−' : '+'}$
+                                {parseFloat(trans.monto).toLocaleString('es-ES', { minimumFractionDigits: 2 })}{' '}
+                                {trans.moneda}
+                              </div>
+                              <small className="text-muted">
+                                {new Date(trans.fecha).toLocaleString('es-ES', {
+                                  day: '2-digit', month: '2-digit', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit',
+                                })}
+                              </small>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                  {(pagination.previous || pagination.next) && (
+                    <div className="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                      <button
+                        className="btn btn-sm btn-outline-secondary"
+                        disabled={!pagination.previous}
+                        onClick={() => fetchTransactions(pagination.page - 1)}
+                      >
+                        ← Anterior
+                      </button>
+                      <small className="text-muted">Página {pagination.page}</small>
+                      <button
+                        className="btn btn-sm btn-outline-secondary"
+                        disabled={!pagination.next}
+                        onClick={() => fetchTransactions(pagination.page + 1)}
+                      >
+                        Siguiente →
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
